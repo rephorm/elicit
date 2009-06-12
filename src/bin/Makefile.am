@@ -1,0 +1,23 @@
+MAINTAINERCLEANFILES = Makefile.in
+
+INCLUDES = @ELICIT_CFLAGS@
+
+bin_PROGRAMS = elicit
+
+elicit_SOURCES = \
+main.c \
+elicit.c \
+elicit.h \
+config.c \
+config.h \
+color.c \
+color.h \
+palette.c \
+palette.h \
+grab.c \
+grab.h \
+types.h \
+$INCLUDES
+
+elicit_LDADD = @ELICIT_LIBS@
+
