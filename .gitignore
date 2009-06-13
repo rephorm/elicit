@@ -16,4 +16,7 @@ libtool
 ltmain.sh
 missing
 
+sysconfig.h
+stamp-h1
+
 src/bin/elicit
