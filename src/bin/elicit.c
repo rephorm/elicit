@@ -1,3 +1,4 @@
+#include <X11/Xlib.h>
 #include "elicit.h"
 #include "config.h"
 #include "zoom.h"
@@ -46,12 +47,19 @@ _elicit_cb_edje_signal(void *data, Evas_Object *obj, const char *emission, const
   if (!strcmp(tok, "shoot"))
   {
     tok = strtok(NULL, ",");
-    if (!tok)
-      elicit_zoom(el->obj.shot);
-    else if (!strcmp(tok, "start"))
+    if (!strcmp(tok, "start"))
+    {
+      if (!el->band)
+        el->band = elicit_band_new();
+
+      elicit_band_show(el->band);
       el->state.shooting = 1;
+    }
     else if (!strcmp(tok, "stop"))
+    {
+      elicit_band_hide(el->band);
       el->state.shooting = 0;
+    }
     else
       fprintf(stderr, "[Elicit] Error: invalid signal: %d\n", emission);
   }
@@ -64,14 +72,43 @@ _elicit_cb_edje_move(void *data, Evas_Object *obj, const char *emission, const c
 {
   Elicit *el = data;
 
+
   if (el->state.shooting)
   {
-    elicit_zoom(el->obj.shot);
+    elicit_shoot(el);
   }
 
   if (el->state.picking)
   {
   }
+}
+
+void
+elicit_shoot(Elicit *el)
+{
+  int x, y;
+  int px, py;
+  int dw, dh;
+  int w, h;
+
+  ecore_x_pointer_last_xy_get(&px, &py);
+  elicit_zoom_size_get(el->obj.shot, &w, &h);
+
+  x = px - .5 * w;
+  y = py - .5 * h;
+
+  /* keep shot within desktop bounds */
+  ecore_x_window_size_get(RootWindow(ecore_x_display_get(),0), &dw, &dh);
+  if (x < 0) x = 0;
+  if (y < 0) y = 0;
+  if (x + w > dw) x = dw - w;
+  if (y + h > dh) y = dh - h;
+
+  if (elicit_config_show_band_get(el))
+    elicit_band_move_resize(el->band, x-1, y-1, w+2, h+2);
+  elicit_zoom_grab(el->obj.shot, x, y, w, h, 0);
+  evas_render(el->evas);
+  
 }
 
 
@@ -141,10 +178,12 @@ elicit_theme_swallow_objs(Elicit *el)
     if (!el->obj.shot)
     {
       el->obj.shot = elicit_zoom_add(el->evas);
-      elicit_zoom_zoom_set(el->obj.shot, el->conf.zoom_level);
+      elicit_zoom_zoom_set(el->obj.shot, elicit_config_zoom_level_get(el));
+      elicit_zoom_grid_visible_set(el->obj.shot, elicit_config_grid_visible_get(el));
     }
 
     edje_object_part_swallow(el->obj.main, "elicit.shot", el->obj.shot);
+
   }
   else
   {

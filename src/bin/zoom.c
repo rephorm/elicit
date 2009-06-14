@@ -1,5 +1,7 @@
 #include "elicit.h"
 #include "zoom.h"
+#include "config.h"
+#include "grab.h"
 #include "X11/Xlib.h"
 
 static Evas_Smart *_smart;
@@ -14,17 +16,13 @@ struct _Elicit_Zoom
 
   Evas_Coord ow, oh; // current object size
   int iw, ih; // how large of a shot to take
+  
+  struct { int x, y, w, h; } cur; //location on screen that current shot came from
+
   int zoom;
-  char show_band;
+  char grid_visible : 1;
 
   int has_data;
-
-  struct
-  {
-    Ecore_Evas *ee;
-    Evas *evas;
-    Evas_Object *obj;
-  } band;
 };
 
 static void _smart_init(void);
@@ -63,14 +61,28 @@ elicit_zoom_zoom_set(Evas_Object *o, int zoom)
 }
 
 void
+elicit_zoom_size_get(Evas_Object *o, int *w, int *h)
+{
+  Elicit_Zoom *z;
+  z = evas_object_smart_data_get(o);
+  //XXX cache this calc on resize or zoom level change?
+  if (w) *w = (z->ow / z->zoom) + (z->ow % z->zoom ? 1 : 0);
+  if (h) *h = (z->oh / z->zoom) + (z->oh % z->zoom ? 1 : 0);
+}
+
+void
 elicit_zoom_grid_visible_set(Evas_Object *o, int visible)
 {
   Elicit_Zoom *z;
   Evas_Object *gui;
   z = evas_object_smart_data_get(o);
+
+  if (z->grid_visible == visible)
+    return;
+
+  z->grid_visible = visible;
   gui = evas_object_name_find(evas_object_evas_get(o), "gui");
 
-  elicit_config_grid_visible_set(visible);
   if (visible)
   {
     if (z->has_data) evas_object_show(z->grid);
@@ -85,31 +97,19 @@ elicit_zoom_grid_visible_set(Evas_Object *o, int visible)
 }
 
 void
-elicit_zoom(Evas_Object *o)
+elicit_zoom_grab(Evas_Object *o, int x, int y, int w, int h, int force)
 {
   Elicit_Zoom *z;
-  int x, y;
-  int px, py;
-  int dw, dh;
   void *data;
 
   z = evas_object_smart_data_get(o);
 
-  ecore_x_pointer_last_xy_get(&px, &py);
+  // don't grab same region twice
+  if (!force && (x == z->cur.x && y == z->cur.y && w == z->cur.w && h == z->cur.h))
+    return;
 
-  x = px - .5 * z->iw;
-  y = py - .5 * z->ih;
-
-  /* get as many pixels as needed to fill area at current zoom */
-  z->iw = (z->ow / z->zoom) + (z->ow % z->zoom ? 1 : 0);
-  z->ih = (z->oh / z->zoom) + (z->oh % z->zoom ? 1 : 0);
-
-  /* keep shot within desktop bounds */
-  ecore_x_window_size_get(RootWindow(ecore_x_display_get(),0), &dw, &dh);
-  if (x < 0) x = 0;
-  if (y < 0) y = 0;
-  if (x + z->iw > dw) x = dw - z->iw;
-  if (y + z->ih > dh) y = dh - z->ih;
+  z->iw = w;
+  z->ih = h;
 
   evas_object_image_alpha_set(z->shot, 0);
   evas_object_image_size_set(z->shot, z->iw, z->ih);
@@ -130,6 +130,8 @@ elicit_zoom(Evas_Object *o)
   evas_object_image_fill_set(z->shot, 0, 0, z->iw * z->zoom, z->ih * z->zoom);
   evas_object_resize(z->shot, z->iw * z->zoom, z->ih * z->zoom);
   evas_object_show(z->shot);
+  if (z->grid_visible)
+    evas_object_show(z->grid);
 
   z->has_data = 1;
 }
@@ -285,8 +287,10 @@ _smart_show(Evas_Object *o)
 
   evas_object_show(z->shot);
   evas_object_show(z->clip);
-  if (z->has_data && elicit_config_grid_visible_get()) evas_object_show(z->grid);
-  else evas_object_hide(z->grid);
+  if (z->has_data && z->grid_visible)
+    evas_object_show(z->grid);
+  else
+    evas_object_hide(z->grid);
 }
 
 static void

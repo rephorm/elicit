@@ -11,6 +11,7 @@
 
 #include "palette.h"
 #include "color.h"
+#include "band.h"
 
 struct Elicit {
   Ecore_Evas *ee;
@@ -27,6 +28,8 @@ struct Elicit {
   Color *color;
   Palette *palette;
 
+  Elicit_Band *band;
+
   Eina_List *palettes;
 
   struct
@@ -41,7 +44,8 @@ struct Elicit {
     char *theme;
 
     int zoom_level;
-    int grid_visible;
+    char grid_visible : 1;
+    char show_band : 1;
 
     int changed;
   } conf;
@@ -57,4 +61,5 @@ int elicit_theme_set(Elicit *el, const char *theme);
 int  elicit_libs_init(void);
 void elicit_libs_shutdown();
 
+void elicit_shoot(Elicit *el);
 #endif
