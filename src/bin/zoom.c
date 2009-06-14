@@ -44,7 +44,6 @@ elicit_zoom_add(Evas *evas)
 {
   _smart_init();
   return evas_object_smart_add(evas, _smart);
-  
 }
 
 void
