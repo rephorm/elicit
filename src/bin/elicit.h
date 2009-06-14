@@ -15,26 +15,39 @@
 struct Elicit {
   Ecore_Evas *ee;
   Evas *evas;
-  Evas_Object *gui;
-  Evas_Object *draggie, *palette_view, *swatch, *zoom;
+
+  struct
+  {
+    Evas_Object *main;
+    Evas_Object *swatch, *shot;
+    Evas_Object *draggie;
+    Evas_Object *shot_list, *swatch_list, *palette_list;
+  } obj;
 
   Color *color;
   Palette *palette;
 
   Eina_List *palettes;
 
+  struct
+  {
+    char shooting : 1;
+    char picking  : 1;
+  } state;
+
   struct {
     int x, y, w, h;
 
     char *theme;
 
-    int zoom;
-    int show_grid;
+    int zoom_level;
+    int grid_visible;
+
+    int changed;
   } conf;
 };
 
 typedef struct Elicit Elicit;
-
 
 Elicit *elicit_new();
 void elicit_free(Elicit *el);

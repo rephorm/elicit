@@ -17,6 +17,8 @@ palette.h \
 grab.c \
 grab.h \
 types.h \
+zoom.c \
+zoom.h \
 $INCLUDES
 
 elicit_LDADD = @ELICIT_LIBS@

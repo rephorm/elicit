@@ -6,6 +6,11 @@
 
 #include "elicit.h"
 
+void
+parse_options(int argc, char **argv, Elicit *el)
+{
+}
+
 int
 main(int argc, char **argv)
 {
@@ -25,7 +30,9 @@ main(int argc, char **argv)
   }
 
   elicit_config_load(el);
-  elicit_theme_set(el, "winter");
+  parse_options(argc, argv, el);
+  if(!el->conf.theme)
+    elicit_theme_set(el, "default");
   elicit_show(el);
 
   ecore_main_loop_begin();

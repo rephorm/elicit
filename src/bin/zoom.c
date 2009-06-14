@@ -1,4 +1,6 @@
-#include "Elicit.h"
+#include "elicit.h"
+#include "zoom.h"
+#include "X11/Xlib.h"
 
 static Evas_Smart *_smart;
 
@@ -13,8 +15,16 @@ struct _Elicit_Zoom
   Evas_Coord ow, oh; // current object size
   int iw, ih; // how large of a shot to take
   int zoom;
+  char show_band;
 
   int has_data;
+
+  struct
+  {
+    Ecore_Evas *ee;
+    Evas *evas;
+    Evas_Object *obj;
+  } band;
 };
 
 static void _smart_init(void);
@@ -79,12 +89,13 @@ void
 elicit_zoom(Evas_Object *o)
 {
   Elicit_Zoom *z;
-  Imlib_Image *im;
   int x, y;
   int px, py;
   int dw, dh;
+  void *data;
 
   z = evas_object_smart_data_get(o);
+
   ecore_x_pointer_last_xy_get(&px, &py);
 
   x = px - .5 * z->iw;
@@ -101,19 +112,27 @@ elicit_zoom(Evas_Object *o)
   if (x + z->iw > dw) x = dw - z->iw;
   if (y + z->ih > dh) y = dh - z->ih;
 
-  /* setup the imlib context */
-  imlib_context_set_display(ecore_x_display_get());
-  imlib_context_set_drawable(RootWindow(ecore_x_display_get(),0));
-  imlib_context_set_visual( DefaultVisual(ecore_x_display_get(), DefaultScreen(ecore_x_display_get() ) ));
+  evas_object_image_alpha_set(z->shot, 0);
+  evas_object_image_size_set(z->shot, z->iw, z->ih);
+  evas_object_image_smooth_scale_set(z->shot, 0);
 
-  /* copy the correct part of the screen */
-  im = imlib_create_image_from_drawable(0, x, y, z->iw, z->ih, 1);
-  imlib_context_set_image(im);
-  imlib_image_set_format("argb");
+  data = evas_object_image_data_get(z->shot, 1);
 
-  elicit_zoom_data_set(o, imlib_image_get_data_for_reading_only(), z->iw, z->ih);
+  if (!elicit_grab_region(x, y, z->iw, z->ih, 0, data))
+  {
+    fprintf(stderr, "[Elicit] Error: can't grab region\n");
+    return;
+  }
 
-  imlib_free_image();
+  evas_object_image_data_set(z->shot, data);
+  evas_object_image_data_update_add(z->shot, 0, 0, z->iw, z->ih);
+
+  /* set it to fill at the current zoom level */
+  evas_object_image_fill_set(z->shot, 0, 0, z->iw * z->zoom, z->ih * z->zoom);
+  evas_object_resize(z->shot, z->iw * z->zoom, z->ih * z->zoom);
+  evas_object_show(z->shot);
+
+  z->has_data = 1;
 }
 
 void
@@ -204,7 +223,9 @@ _smart_add(Evas_Object *o)
 
   z->grid = evas_object_image_add(evas);
 
-  snprintf(buf, sizeof(buf), DATADIR"/images/grid_cell.png");
+  //XXX fix path
+//  snprintf(buf, sizeof(buf), DATADIR"/images/grid_cell.png");
+  snprintf(buf, sizeof(buf), "/home/rephorm/code/elicit2/data/images/grid_cell.png");
   evas_object_image_file_set(z->grid, buf, "");
   evas_object_smart_member_add(z->grid, o);
 
@@ -266,6 +287,7 @@ _smart_show(Evas_Object *o)
   evas_object_show(z->shot);
   evas_object_show(z->clip);
   if (z->has_data && elicit_config_grid_visible_get()) evas_object_show(z->grid);
+  else evas_object_hide(z->grid);
 }
 
 static void

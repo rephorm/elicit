@@ -9,13 +9,28 @@ elicit_config_load(Elicit *el)
   el->conf.y = 0;
   el->conf.w = 200;
   el->conf.h = 200;
-  el->conf.zoom = 4;
-  el->conf.show_grid = 1;
+  el->conf.zoom_level = 4;
+  el->conf.grid_visible = 1;
 }
 
 int
 elicit_config_save(Elicit *el)
 {
   // XXX save config to disk...
+}
+
+void
+elicit_config_grid_visible_set(Elicit *el, int grid_visible)
+{
+  if (el->conf.grid_visible == grid_visible) return;
+
+  el->conf.grid_visible = grid_visible;
+  el->conf.changed = 1;
+}
+
+int
+elicit_config_grid_visible_get(Elicit *el)
+{
+  return el->conf.grid_visible;
 }
 
