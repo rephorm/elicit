@@ -1,6 +1,7 @@
 collections {
 
 #include "groups/main.edc"
+#include "groups/button_close.edc"
 #include "groups/band.edc"
 
 }
