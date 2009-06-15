@@ -164,11 +164,12 @@ group {
 
     part {
       name: "elicit.swatch";
+      type: SWALLOW;
       description {
         state: "default" 0.0;
         rel1 { to: "base"; relative: 0 1; offset: 8 -33; }
-        rel2 { to: "base"; relative: 0 1; offset: 25 -16;
-        }
+        rel2 { to: "base"; relative: 0 1; offset: 25 -16; }
+        color: 120 230 200 120;
       }
     }
     part {

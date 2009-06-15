@@ -32,8 +32,11 @@ const char *color_name_get(Color *color);
 Color_Mode color_mode_get(Color *color);
 void color_rgba_set(Color *color, int r, int g, int b, int a);
 void color_hsva_set(Color *color, float h, float s, float v, int a);
+void color_argb_int_set(Color *color, int argb);
+
 void color_rgba_get(Color *color, int *r, int *g, int *b, int *a);
 void color_hsva_get(Color *color, float *h, float *s, float *v, int *a);
+int  color_argb_int_get(Color *color);
 
 void color_hex_set(Color *color, const char *hex);
 const char *color_hex_get(Color *color, int options);

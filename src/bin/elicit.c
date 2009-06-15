@@ -5,6 +5,8 @@
 #include "elicit.h"
 #include "config.h"
 #include "zoom.h"
+#include "grab.h"
+#include "color.h"
 
 void
 _elicit_cb_resize(Ecore_Evas *ee)
@@ -33,8 +35,7 @@ _elicit_cb_edje_signal(void *data, Evas_Object *obj, const char *emission, const
   Elicit *el = data;
   char *signal;
   char *tok;
-
-  printf("signal (%s)!\n", emission);
+  int invalid = 0;
 
   signal = strdup(emission);
 
@@ -47,6 +48,7 @@ _elicit_cb_edje_signal(void *data, Evas_Object *obj, const char *emission, const
     return;
   }
 
+  /* magnification */
   if (!strcmp(tok, "shoot"))
   {
     tok = strtok(NULL, ",");
@@ -64,8 +66,31 @@ _elicit_cb_edje_signal(void *data, Evas_Object *obj, const char *emission, const
       el->state.shooting = 0;
     }
     else
-      fprintf(stderr, "[Elicit] Error: invalid signal: %s\n", emission);
+      invalid = 1;
   }
+
+  /* color selection */
+  else if (!strcmp(tok, "pick")) 
+  {
+    tok = strtok(NULL, ",");
+    if (!strcmp(tok, "start"))
+      el->state.picking = 1;
+    else if (!strcmp(tok, "stop"))
+      el->state.picking = 0;
+    else
+      invalid = 1;
+  }
+
+  /* quit */
+  else if (!strcmp(tok, "quit"))
+    ecore_main_loop_quit();
+
+  /* unknown signal */
+  else
+    invalid = 1;
+
+  if (invalid)
+    fprintf(stderr, "[Elicit] Error: invalid signal: %s\n", emission);
 
   free(signal);
 }
@@ -77,13 +102,10 @@ _elicit_cb_edje_move(void *data, Evas_Object *obj, const char *emission, const c
 
 
   if (el->state.shooting)
-  {
     elicit_shoot(el);
-  }
 
   if (el->state.picking)
-  {
-  }
+    elicit_pick(el);
 }
 
 void
@@ -111,7 +133,29 @@ elicit_shoot(Elicit *el)
     elicit_band_move_resize(el->band, x-1, y-1, w+2, h+2);
   elicit_zoom_grab(el->obj.shot, x, y, w, h, 0);
   evas_render(el->evas);
-  
+}
+
+void
+elicit_pick(Elicit *el)
+{
+  int x, y;
+  int data;
+  ecore_x_pointer_last_xy_get(&x, &y);
+  if (elicit_grab_region(x, y, 1, 1, 0, &data))
+  {
+    color_argb_int_set(el->color, data);
+    elicit_swatch_color_update(el);
+  }
+}
+
+void
+elicit_swatch_color_update(Elicit *el)
+{
+  int r, g, b;
+
+  color_rgba_get(el->color, &r, &g, &b, NULL);
+  evas_object_color_set(el->obj.swatch, r, g, b, 255);
+  evas_object_show(el->obj.swatch);
 }
 
 
@@ -225,8 +269,7 @@ elicit_theme_swallow_objs(Elicit *el)
     if (!el->obj.swatch)
     {
       el->obj.swatch = evas_object_rectangle_add(el->evas);
-      evas_object_color_set(el->obj.swatch, 255, 255, 255, 255);
-      evas_object_show(el->obj.swatch);
+      elicit_swatch_color_update(el);
     }
 
     edje_object_part_swallow(el->obj.main, "elicit.swatch", el->obj.swatch);

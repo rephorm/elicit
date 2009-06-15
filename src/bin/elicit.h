@@ -62,4 +62,6 @@ int  elicit_libs_init(void);
 void elicit_libs_shutdown();
 
 void elicit_shoot(Elicit *el);
+void elicit_pick(Elicit *el);
+void elicit_swatch_color_update(Elicit *el);
 #endif

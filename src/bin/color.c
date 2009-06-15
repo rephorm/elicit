@@ -146,6 +146,22 @@ color_hsva_set(Color *color, float h, float s, float v, int a)
   evas_color_hsv_to_rgb(color->h, color->s, color->v, &(color->r), &(color->g), &(color->b));
 }
 
+/**
+ * Set a color from ARGB values packed into an integer
+ * @param color
+ * @param argb
+ */
+void
+color_argb_int_set(Color *color, int argb)
+{
+  color_rgba_set(
+    color,
+    argb >> 16 & 0xff,
+    argb >> 8  & 0xff,
+    argb       & 0xff,
+    argb >> 24 & 0xff
+  );
+}
 
 /**
  * Get the RGBA values of a color
@@ -183,6 +199,20 @@ color_hsva_get(Color *color, float *h, float *s, float *v, int *a)
   if (s) *s = color->s;
   if (v) *v = color->v;
   if (a) *a = color->a;
+}
+
+/**
+ * Get the ARGB values of a color as a packed integer
+ * @param color
+ * @return - rgba packed in to integer  
+ */
+int
+color_argb_int_get(Color *color)
+{
+  return color->a << 24 |
+         color->r << 16 |
+         color->g << 8 |
+         color->b;
 }
 
 /**
