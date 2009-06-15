@@ -1,0 +1,20 @@
+images {
+  image: "band.png" COMP;
+}
+
+group {
+  name: "elicit.band";
+  parts {
+    part {
+      name: "band";
+      type: IMAGE;
+      description {
+        state: "default" 0.0;
+        image {
+          normal: "band.png";
+          border: 1 1 1 1;
+        }
+      }
+    }
+  }
+}

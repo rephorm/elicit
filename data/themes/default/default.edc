@@ -1,0 +1,6 @@
+collections {
+
+#include "groups/main.edc"
+#include "groups/band.edc"
+
+}

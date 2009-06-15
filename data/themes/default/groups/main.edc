@@ -1,0 +1,58 @@
+group {
+  name: "elicit.main";
+
+  parts {
+    part {
+      name: "bg";
+      type: RECT;
+      description {
+        state: "default" 0.0;
+        color: 120 0 0 255;
+      }
+    }
+    part {
+      name: "elicit.shot";
+      type: SWALLOW;
+      description {
+        state: "default" 0.0;
+        rel1.offset: 10 10;
+        rel2.offset: -11 -60;
+      }
+    }
+    part {
+      name: "elicit.shot.event";
+      type: RECT;
+      repeat_events: true;
+      description {
+        state: "default" 0.0;
+        color: 0 0 0 0;
+        rel1.to: "elicit.shot";
+        rel2.to: "elicit.shot";
+      }
+    }
+
+    part {
+      name: "elicit.swatch";
+      description {
+        state: "default" 0.0;
+        rel1 { relative: 0 1; offset: 10 -50; }
+        rel2.offset: -10 -10;
+      }
+    }
+  }
+
+  programs {
+    program {
+      name: "elicit.shoot.start";
+      signal: "mouse,down,1";
+      source: "elicit.shot.event";
+      action: SIGNAL_EMIT "elicit,shoot,start" "";
+    }
+    program {
+      name: "elicit.shoot.stop";
+      signal: "mouse,up,1";
+      source: "elicit.shot.event";
+      action: SIGNAL_EMIT "elicit,shoot,stop" "";
+    }
+  }
+}
