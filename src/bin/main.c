@@ -5,6 +5,7 @@
 #include <Ecore_X.h>
 
 #include "elicit.h"
+#include "config.h"
 
 void
 parse_options(int argc, char **argv, Elicit *el)

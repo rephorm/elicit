@@ -1,6 +1,6 @@
 MAINTAINERCLEANFILES = Makefile.in
 
-INCLUDES = @ELICIT_CFLAGS@ -Wall
+INCLUDES = @ELICIT_CFLAGS@ -Wall -Werror
 
 bin_PROGRAMS = elicit
 

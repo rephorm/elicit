@@ -1,4 +1,6 @@
 #include <stdlib.h>
+#include <Edje.h>
+#include <Ecore_Evas.h>
 #include "band.h"
 
 Elicit_Band *
@@ -24,6 +26,18 @@ elicit_band_new()
   evas_object_show(band->obj);
 
   return band;
+}
+
+void
+elicit_band_free(Elicit_Band *band)
+{
+  if (band->obj)
+    evas_object_del(band->obj);
+
+  if (band->ee)
+    ecore_evas_free(band->ee);
+
+  free(band);
 }
 
 void

@@ -12,12 +12,14 @@ elicit_config_load(Elicit *el)
   el->conf.zoom_level = 4;
   el->conf.grid_visible = 1;
   el->conf.show_band = 1;
+  return 1;
 }
 
 int
 elicit_config_save(Elicit *el)
 {
   // XXX save config to disk...
+  return 0;
 }
 
 void

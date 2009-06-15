@@ -8,4 +8,6 @@ void elicit_zoom_grab(Evas_Object *o, int x, int y, int w, int h, int force);
 void elicit_zoom_data_get(Evas_Object *o, void **data, int *w, int *h);
 void elicit_zoom_data_set(Evas_Object *o, void *data, int w, int h);
 
+void elicit_zoom_size_get(Evas_Object *o, int *w, int *h);
+
 #endif

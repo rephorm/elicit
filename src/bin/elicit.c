@@ -1,4 +1,7 @@
 #include <X11/Xlib.h>
+#include <Ecore.h>
+#include <Ecore_X.h>
+#include <Ecore_File.h>
 #include "elicit.h"
 #include "config.h"
 #include "zoom.h"
@@ -39,7 +42,7 @@ _elicit_cb_edje_signal(void *data, Evas_Object *obj, const char *emission, const
   tok = strtok(NULL, ",");
 
   if (!tok) {
-    fprintf(stderr, "[Elicit] Error: invalid signal: %d\n", emission);
+    fprintf(stderr, "[Elicit] Error: invalid signal: %s\n", emission);
     free(signal);
     return;
   }
@@ -61,7 +64,7 @@ _elicit_cb_edje_signal(void *data, Evas_Object *obj, const char *emission, const
       el->state.shooting = 0;
     }
     else
-      fprintf(stderr, "[Elicit] Error: invalid signal: %d\n", emission);
+      fprintf(stderr, "[Elicit] Error: invalid signal: %s\n", emission);
   }
 
   free(signal);
@@ -140,9 +143,28 @@ elicit_new()
 void
 elicit_free(Elicit *el)
 {
-  color_free(el->color);
-  evas_object_del(el->obj.main);
-  ecore_evas_free(el->ee);
+  if (el->color)
+    color_free(el->color);
+
+  if (el->obj.main)
+    evas_object_del(el->obj.main);
+
+  if (el->obj.shot)
+    evas_object_del(el->obj.shot);
+
+  if (el->obj.swatch)
+    evas_object_del(el->obj.swatch);
+
+  if (el->ee)
+    ecore_evas_free(el->ee);
+
+  if (el->band)
+    elicit_band_free(el->band);
+
+  if (el->conf.theme)
+    free(el->conf.theme);
+
+  free(el);
 }
 
 void
@@ -166,7 +188,10 @@ elicit_theme_find(const char *theme)
   snprintf(buf, sizeof(buf), "/home/rephorm/code/elicit2/data/themes/default/%s.edj", theme);
   if (ecore_file_exists(buf))
     return buf;
+  else
+    return NULL;
 }
+
 
 void
 elicit_theme_swallow_objs(Elicit *el)

@@ -13,6 +13,7 @@ struct Elicit_Band
 typedef struct Elicit_Band Elicit_Band;
 
 Elicit_Band * elicit_band_new();
+void elicit_band_free(Elicit_Band *band);
 void elicit_band_show(Elicit_Band *band);
 void elicit_band_hide(Elicit_Band *band);
 void elicit_band_move_resize(Elicit_Band *band, int x, int y, int w, int h);
