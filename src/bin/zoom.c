@@ -211,6 +211,7 @@ _smart_add(Evas_Object *o)
   Elicit_Zoom *z;
   Evas *evas;
   char buf[PATH_MAX];
+  char *datadir;
 
   z = calloc(1, sizeof(Elicit_Zoom));
   if (!z) return;
@@ -224,9 +225,9 @@ _smart_add(Evas_Object *o)
 
   z->grid = evas_object_image_add(evas);
 
-  //XXX fix path
-//  snprintf(buf, sizeof(buf), DATADIR"/images/grid_cell.png");
-  snprintf(buf, sizeof(buf), "/home/rephorm/code/elicit2/data/images/grid_cell.png");
+  datadir = br_find_data_dir(DATADIR);
+  snprintf(buf, sizeof(buf), "%s/%s/images/grid_cell.png", datadir, PACKAGE);
+  free(datadir);
   evas_object_image_file_set(z->grid, buf, "");
   evas_object_smart_member_add(z->grid, o);
 

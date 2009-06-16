@@ -163,6 +163,8 @@ Elicit *
 elicit_new()
 {
   Elicit *el;
+  char buf[PATH_MAX];
+  char *dir;
   
   el = calloc(sizeof(Elicit), 1);
 
@@ -180,6 +182,12 @@ elicit_new()
   el->obj.main = edje_object_add(el->evas);
 
   el->color = color_new();
+
+  dir = br_find_data_dir(DATADIR);
+
+  snprintf(buf, sizeof(buf), "%s/%s/", dir, PACKAGE);
+  el->path.datadir = strdup(buf);
+  free(dir);
 
   return el;
 }
@@ -205,8 +213,9 @@ elicit_free(Elicit *el)
   if (el->band)
     elicit_band_free(el->band);
 
-  if (el->conf.theme)
-    free(el->conf.theme);
+  IF_FREE(el->conf.theme);
+  IF_FREE(el->path.theme);
+  IF_FREE(el->path.datadir);
 
   free(el);
 }
@@ -224,18 +233,28 @@ elicit_hide(Elicit *el)
 }
 
 const char *
-elicit_theme_find(const char *theme)
+elicit_theme_find(Elicit *el, const char *theme)
 {
   static char buf[PATH_MAX];
+  char *home;
 
-  // XXX run over set of dirs
-  snprintf(buf, sizeof(buf), "/home/rephorm/code/elicit2/data/themes/default/%s.edj", theme);
-  if (ecore_file_exists(buf))
+  // check in home dir
+  home = getenv("HOME");
+  if (home)
+  {
+    snprintf(buf, sizeof(buf), "%s/.e/apps/elicit/themes/%s.edj", home, theme);
+    if (ecore_file_exists(buf) && edje_file_group_exists(buf, "elicit.main"))
+      return buf;
+  }
+
+  // check in sys dir
+  snprintf(buf, sizeof(buf), "%s/themes/%s.edj", el->path.datadir, theme);
+  if (ecore_file_exists(buf) && edje_file_group_exists(buf, "elicit.main"))
     return buf;
-  else
-    return NULL;
-}
 
+
+  return NULL;
+}
 
 void
 elicit_theme_swallow_objs(Elicit *el)
@@ -303,13 +322,23 @@ elicit_theme_set(Elicit *el, const char *theme)
   const char *path;
   int w, h;
 
-  path = elicit_theme_find(theme);
+  /* first check if full path is given */
+  if (theme[0] == '/')
+  {
+    if (!edje_file_group_exists(theme, "elicit.main"))
+      return 0;
+  }
+  else
+    path = elicit_theme_find(el, theme);
 
   if (!path)
   {
     fprintf(stderr, "[Elicit] Error: theme \"%s\" not found.\n", theme);
     return 0;
   }
+
+  if (el->path.theme) free(el->path.theme);
+  el->path.theme = el->path.theme;
 
   if (el->conf.theme) free(el->conf.theme);
   el->conf.theme = strdup(theme);
@@ -342,6 +371,8 @@ elicit_theme_set(Elicit *el, const char *theme)
 int
 elicit_libs_init(void)
 {
+  br_init(NULL);
+
   if (!eina_init())
   {
     fprintf(stderr, "[Elicit] Failed to initialize eina.\n");

@@ -6,7 +6,7 @@ SUFFIXES = .edc .edj
 CLEANFILES = $(EDJ)
 
 themedir = $(pkgdatadir)/themes
-theme_DATA = $(EET)
+theme_DATA = $(EDJ)
 
 all: $(EDJ)
 

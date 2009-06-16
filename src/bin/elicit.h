@@ -8,6 +8,8 @@
 
 #include <limits.h>
 #include <string.h>
+#include "sysconfig.h"
+#include "binreloc.h"
 
 #include "palette.h"
 #include "color.h"
@@ -49,6 +51,12 @@ struct Elicit {
 
     int changed;
   } conf;
+
+  struct
+  {
+    char *datadir;
+    char *theme;
+  } path;
 };
 
 typedef struct Elicit Elicit;
@@ -64,4 +72,6 @@ void elicit_libs_shutdown();
 void elicit_shoot(Elicit *el);
 void elicit_pick(Elicit *el);
 void elicit_swatch_color_update(Elicit *el);
+
+#define IF_FREE(x) if (x) free(x);
 #endif
