@@ -1,8 +1,9 @@
+#include <X11/Xlib.h>
+#include <Ecore_File.h>
 #include "elicit.h"
 #include "zoom.h"
 #include "config.h"
 #include "grab.h"
-#include "X11/Xlib.h"
 
 static Evas_Smart *_smart;
 
@@ -228,6 +229,9 @@ _smart_add(Evas_Object *o)
   datadir = br_find_data_dir(DATADIR);
   snprintf(buf, sizeof(buf), "%s/%s/images/grid_cell.png", datadir, PACKAGE);
   free(datadir);
+  if (!ecore_file_exists(buf))
+    snprintf(buf, sizeof(buf), "%s/%s/images/grid_cell.png", DATADIR, PACKAGE);
+
   evas_object_image_file_set(z->grid, buf, "");
   evas_object_smart_member_add(z->grid, o);
 
