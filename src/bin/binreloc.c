@@ -13,6 +13,8 @@
 #ifndef __BINRELOC_C__
 #define __BINRELOC_C__
 
+#include "sysconfig.h"
+
 #ifdef ENABLE_BINRELOC
 	#include <sys/types.h>
 	#include <sys/stat.h>

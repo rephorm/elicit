@@ -184,8 +184,12 @@ elicit_new()
   el->color = color_new();
 
   dir = br_find_data_dir(DATADIR);
-
   snprintf(buf, sizeof(buf), "%s/%s/", dir, PACKAGE);
+  if (!ecore_file_exists(buf))
+  {
+    fprintf(stderr, "[Elicit] Warning: falling back to hardcoded data dir.\n");
+    snprintf(buf, sizeof(buf), "%s/%s/", DATADIR, PACKAGE);
+  }
   el->path.datadir = strdup(buf);
   free(dir);
 
@@ -338,7 +342,7 @@ elicit_theme_set(Elicit *el, const char *theme)
   }
 
   if (el->path.theme) free(el->path.theme);
-  el->path.theme = el->path.theme;
+  el->path.theme = strdup(path);
 
   if (el->conf.theme) free(el->conf.theme);
   el->conf.theme = strdup(theme);
@@ -371,7 +375,10 @@ elicit_theme_set(Elicit *el, const char *theme)
 int
 elicit_libs_init(void)
 {
-  br_init(NULL);
+  BrInitError error;
+
+  if (!br_init(&error) && error != BR_INIT_ERROR_DISABLED)
+    fprintf(stderr, "[Elicit] Failed to initialize binreloc (error code: %d)\nFalling back to hardcoded paths.", error);
 
   if (!eina_init())
   {
