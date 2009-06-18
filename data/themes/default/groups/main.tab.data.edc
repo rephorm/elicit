@@ -1,3 +1,7 @@
+images {
+  image: "frame-shallow.png" COMP;
+}
+
 #define COLOR_SLIDER(NAME, NUM) \
 part { \
   name: "elicit.cslider."NAME; \
@@ -103,7 +107,7 @@ part {
     rel1 { to: "elicit.color.triad1"; offset: -2 -2; }
     rel2 { to: "elicit.color.triad1"; offset: 1 1; }
     image {
-      normal: "frame-base.png";
+      normal: "frame-shallow.png";
       border: 7 8 7 8;
     }
   }
@@ -118,7 +122,7 @@ part {
     rel1 { to: "elicit.color.complement"; offset: -2 -2; }
     rel2 { to: "elicit.color.complement"; offset: 1 1; }
     image {
-      normal: "frame-base.png";
+      normal: "frame-shallow.png";
       border: 7 8 7 8;
     }
   }
@@ -133,7 +137,7 @@ part {
     rel1 { to: "elicit.color.triad2"; offset: -2 -2; }
     rel2 { to: "elicit.color.triad2"; offset: 1 1; }
     image {
-      normal: "frame-base.png";
+      normal: "frame-shallow.png";
       border: 7 8 7 8;
     }
   }
