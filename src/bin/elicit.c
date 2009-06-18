@@ -18,8 +18,8 @@ static char *cslider_part_names[6] = {
   "elicit.cslider.value"
 };
 
-void
-_elicit_cb_resize(Ecore_Evas *ee)
+static void
+elicit_cb_resize(Ecore_Evas *ee)
 {
   Elicit *el;
   int w, h;
@@ -184,7 +184,6 @@ elicit_shoot(Elicit *el)
   if (elicit_config_show_band_get(el))
     elicit_band_move_resize(el->band, x-1, y-1, w+2, h+2);
   elicit_zoom_grab(el->obj.shot, x, y, w, h, 0);
-  evas_render(el->evas);
 }
 
 void
@@ -253,7 +252,7 @@ elicit_new()
   ecore_evas_shaped_set(el->ee, 1);
 
   ecore_evas_data_set(el->ee, "Elicit", el);
-  ecore_evas_callback_resize_set(el->ee, _elicit_cb_resize);
+  ecore_evas_callback_resize_set(el->ee, elicit_cb_resize);
 
   el->obj.main = edje_object_add(el->evas);
 
