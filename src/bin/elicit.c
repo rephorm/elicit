@@ -205,33 +205,14 @@ static void
 cb_color_changed(Color *color, void *data)
 {
   int r,g,b;
-  float h,s,v;
-  char buf[10];
   Elicit *el = data;
 
   color_rgba_get(color, &r, &g, &b, NULL);
-  color_hsva_get(color, &h, &s, &v, NULL);
 
   if (el->obj.swatch)
     evas_object_color_set(el->obj.swatch, r, g, b, 255);
 
-  //XXX send message to theme with new color values?
-  if (el->obj.main)
-  {
-    snprintf(buf, sizeof(buf), "%d", r);
-    edje_object_part_text_set(el->obj.main, "elicit.color.red:val", buf);
-    edje_object_part_drag_value_set(el->obj.main, "elicit.color.red:slider", r/255.0, r/255.0);
-    snprintf(buf, sizeof(buf), "%d", g);
-    edje_object_part_text_set(el->obj.main, "elicit.color.green:val", buf);
-    snprintf(buf, sizeof(buf), "%d", b);
-    edje_object_part_text_set(el->obj.main, "elicit.color.blue:val", buf);
-    snprintf(buf, sizeof(buf), "%.1f", h);
-    edje_object_part_text_set(el->obj.main, "elicit.color.hue:val", buf);
-    snprintf(buf, sizeof(buf), "%.1f", s);
-    edje_object_part_text_set(el->obj.main, "elicit.color.saturation:val", buf);
-    snprintf(buf, sizeof(buf), "%.1f", v);
-    edje_object_part_text_set(el->obj.main, "elicit.color.value:val", buf);
-  }
+  edje_object_part_text_set(el->obj.main, "elicit.color.hex", color_hex_get(el->color, COLOR_HEX_HASH | COLOR_HEX_CAPS));
 }
 
 Elicit *
