@@ -9,6 +9,15 @@
 #include "color.h"
 #include "cslider.h"
 
+static char *cslider_part_names[6] = {
+  "elicit.cslider.red",
+  "elicit.cslider.green",
+  "elicit.cslider.blue",
+  "elicit.cslider.hue",
+  "elicit.cslider.saturation",
+  "elicit.cslider.value"
+};
+
 void
 _elicit_cb_resize(Ecore_Evas *ee)
 {
@@ -331,6 +340,7 @@ elicit_theme_find(Elicit *el, const char *theme)
 void
 elicit_theme_swallow_objs(Elicit *el)
 {
+  int i;
 
   if (edje_object_part_exists(el->obj.main, "elicit.shot"))
   {
@@ -364,17 +374,21 @@ elicit_theme_swallow_objs(Elicit *el)
     el->obj.swatch = NULL;
   }
 
-  if (edje_object_part_exists(el->obj.main, "elicit.cslider.red"))
+  for (i = 0; i < 6; i++)
   {
-    el->obj.cslider.red = elicit_cslider_add(el->evas);
-    elicit_cslider_theme_set(el->obj.cslider.red, el->path.theme, "elicit.cslider");
-    elicit_cslider_color_set(el->obj.cslider.red, el->color, COLOR_TYPE_RED);
-    edje_object_part_swallow(el->obj.main, "elicit.cslider.red", el->obj.cslider.red);
-  }
-  else if (el->obj.cslider.red)
-  {
-    evas_object_del(el->obj.cslider.red);
-    el->obj.cslider.red = NULL;
+
+    if (edje_object_part_exists(el->obj.main, cslider_part_names[i]))
+    {
+      el->obj.cslider[i] = elicit_cslider_add(el->evas);
+      elicit_cslider_theme_set(el->obj.cslider[i], el->path.theme, "elicit.cslider");
+      elicit_cslider_color_set(el->obj.cslider[i], el->color, i);
+      edje_object_part_swallow(el->obj.main, cslider_part_names[i], el->obj.cslider[i]);
+    }
+    else if (el->obj.cslider[i])
+    {
+      evas_object_del(el->obj.cslider[i]);
+      el->obj.cslider[i] = NULL;
+    }
   }
 }
 

@@ -26,9 +26,7 @@ struct Elicit {
     Evas_Object *draggie;
     Evas_Object *shot_list, *swatch_list, *palette_list;
 
-    struct {
-      Evas_Object *red, *green, *blue, *hue, *saturation, *value;
-    } cslider;
+    Evas_Object *cslider[6];
   } obj;
 
   Color *color;
