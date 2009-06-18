@@ -218,6 +218,11 @@ group {
         rel2 { to: "panel.border.left"; offset: -2 -2; }
         image { normal: "grad-left.png"; border: 0 0 7 8; }
       }
+      description {
+        state: "active" 0.0;
+        inherit: "default" 0.0;
+        color_class: "elicit.border";
+      }
     }
 
     part {
@@ -381,6 +386,28 @@ group {
       action: STATE_SET "default" 0.0;
       target: "panel.border.left";
       target: "panel.border.close";
+      transition: DECELERATE 0.5;
+    }
+
+    program {
+      name: "elicit.activate";
+      signal: "elicit,activate";
+      source: "*";
+      action: STATE_SET "active" 0.0;
+      target: "base.gradient.top";
+      target: "base.gradient.bottom";
+      target: "panel.border.gradient";
+      transition: DECELERATE 0.5;
+    }
+
+    program {
+      name: "elicit.deactivate";
+      signal: "elicit,deactivate";
+      source: "*";
+      action: STATE_SET "default" 0.0;
+      target: "base.gradient.top";
+      target: "base.gradient.bottom";
+      target: "panel.border.gradient";
       transition: DECELERATE 0.5;
     }
 

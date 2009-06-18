@@ -27,7 +27,7 @@ static char *related_color_names[3] = {
 static int related_color_offset[3] = { 120, 180, 240 };
 
 static void
-elicit_cb_resize(Ecore_Evas *ee)
+elicit_cb_ee_resize(Ecore_Evas *ee)
 {
   Elicit *el;
   int w, h;
@@ -47,6 +47,26 @@ elicit_cb_resize(Ecore_Evas *ee)
   el->conf.changed = 1;
 }
 
+static void
+elicit_cb_ee_mouse_in(Ecore_Evas *ee)
+{
+  Elicit *el;
+  el = ecore_evas_data_get(ee, "Elicit");
+  if (!el) return;
+
+  edje_object_signal_emit(el->obj.main, "elicit,activate", "elicit");
+}
+
+static void
+elicit_cb_ee_mouse_out(Ecore_Evas *ee)
+{
+  Elicit *el;
+  el = ecore_evas_data_get(ee, "Elicit");
+  if (!el) return;
+
+  edje_object_signal_emit(el->obj.main, "elicit,deactivate", "elicit");
+}
+
 void
 _elicit_cb_edje_signal(void *data, Evas_Object *obj, const char *emission, const char *source)
 {
@@ -54,6 +74,10 @@ _elicit_cb_edje_signal(void *data, Evas_Object *obj, const char *emission, const
   char *signal;
   char *tok;
   int invalid = 0;
+
+  /* ignore signals we sent */
+  if (!strcmp(source, "elicit"))
+    return;
 
   signal = strdup(emission);
 
@@ -221,7 +245,9 @@ elicit_new()
   ecore_evas_shaped_set(el->ee, 1);
 
   ecore_evas_data_set(el->ee, "Elicit", el);
-  ecore_evas_callback_resize_set(el->ee, elicit_cb_resize);
+  ecore_evas_callback_resize_set(el->ee, elicit_cb_ee_resize);
+  ecore_evas_callback_mouse_in_set(el->ee, elicit_cb_ee_mouse_in);
+  ecore_evas_callback_mouse_out_set(el->ee, elicit_cb_ee_mouse_out);
 
   el->obj.main = edje_object_add(el->evas);
 
