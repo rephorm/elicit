@@ -139,10 +139,10 @@ color_rgba_set(Color *color, int r, int g, int b, int a)
 {
   color->mode = COLOR_MODE_RGBA;
 
-  if (r >= 0) color->r = r;
-  if (g >= 0) color->g = g;
-  if (b >= 0) color->b = b;
-  if (a >= 0) color->a = a;
+  if (r >= 0 && r <= 255) color->r = r;
+  if (g >= 0 && g <= 255) color->g = g;
+  if (b >= 0 && b <= 255) color->b = b;
+  if (a >= 0 && a <= 255) color->a = a;
   evas_color_rgb_to_hsv(color->r, color->g, color->b, &(color->h), &(color->s), &(color->v));
   color_changed(color);
 }
@@ -161,10 +161,10 @@ void
 color_hsva_set(Color *color, float h, float s, float v, int a)
 {
   color->mode = COLOR_MODE_HSVA;
-  if (h >= 0) color->h = h;
-  if (s >= 0) color->s = s;
-  if (v >= 0) color->v = v;
-  if (a >= 0) color->a = a;
+  if (h >= 0 && h <= 360) color->h = h;
+  if (s >= 0 && s <= 1) color->s = s;
+  if (v >= 0 && v <= 1) color->v = v;
+  if (a >= 0 && a <= 255) color->a = a;
   evas_color_hsv_to_rgb(color->h, color->s, color->v, &(color->r), &(color->g), &(color->b));
   color_changed(color);
 }
