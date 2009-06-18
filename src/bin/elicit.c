@@ -132,6 +132,13 @@ _elicit_cb_edje_signal(void *data, Evas_Object *obj, const char *emission, const
       elicit_scroll(el, source, -1);
   }
 
+  else if (!strcmp(tok, "colorclass"))
+  {
+    int r,g,b,a;
+    color_rgba_get(el->color, &r, &g, &b, &a);
+    edje_object_color_class_set(el->obj.main, source, r, g, b, a, r, g, b, a, r, g, b, a);
+  }
+
   /* quit */
   else if (!strcmp(tok, "quit"))
     ecore_main_loop_quit();
