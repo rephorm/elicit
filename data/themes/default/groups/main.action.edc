@@ -27,8 +27,8 @@ images {
         visible: 0;
         min: 20 20;
         max: 20 20;
-        rel1 { to: "elicit.swatch"; relative: 1 0; offset: 10 0; }
-        rel2 { to: "elicit.swatch"; relative: 1 1; offset: 30 -1; }
+        rel1 { to: "elicit.swatch"; relative: 1 0; offset: 5 0; }
+        rel2 { to: "elicit.swatch"; relative: 1 1; offset: 25 -1; }
         align: 1 0.5;
       }
     }
@@ -40,14 +40,14 @@ images {
       description {
         state: "default" 0.0;
         rel1 { to: "action.icon"; relative: 1 0; offset: 2 2; }
-        rel2 { to_x: "button.close"; to_y: "action.icon"; relative: 0 1; offset: -5 -1; }
+        rel2 { to_x: "button.close"; to_y: "action.icon"; relative: 0 1; offset: -1 -1; }
         color: 140 140 140 255;
         text {
           text: "Magnify";
           font: "Vera";
           size: 10;
           fit: 0 0;
-          min: 1 1;
+          min: 0 0;
           align: 0.0 0.5;
         }
       }
