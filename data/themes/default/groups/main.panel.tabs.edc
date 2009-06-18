@@ -199,3 +199,4 @@ TAB(2, "shots", "tab-shot.png", 6, 6, "Saved Shots");
 TAB(3, "misc", "tab-theme.png", 8, 8, "Miscellaneous");
 
 #include "main.tab.data.edc"
+#include "main.tab.palette.edc"

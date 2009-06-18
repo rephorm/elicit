@@ -1,0 +1,48 @@
+
+part {
+  name: "zoom.label";
+  type: TEXT;
+  clip_to: "tab.misc.clip";
+  description {
+    state: "default" 0.0;
+    rel1 { to: "tab.misc.clip"; offset: 3 110; }
+    rel2 { to: "tab.misc.clip"; relative: 1 0; offset: -4 118; }
+    color: 140 140 140 255;
+    text {
+      text: "Zoom:";
+      font: "Vera";
+      size: 8;
+      fit: 0 0;
+      min: 1 0;
+      align: 0.0 0.5;
+    }
+  }
+}
+
+part {
+  name: "grid.label";
+  type: TEXT;
+  clip_to: "tab.misc.clip";
+  description {
+    state: "default" 0.0;
+    rel1 { to: "tab.misc.clip"; offset: 3 130; }
+    rel2 { to: "tab.misc.clip"; relative: 1 0; offset: -4 138; }
+    color: 140 140 140 255;
+    text {
+      text: "Show Grid:";
+      font: "Vera";
+      size: 8;
+      fit: 0 0;
+      min: 1 0;
+      align: 0.0 0.5;
+    }
+  }
+}
+
+program {
+  name: "elicit.pick.border";
+  signal: "mouse,clicked,2";
+  source: "elicit.swatch.event";
+  action: SIGNAL_EMIT "elicit,colorclass" "elicit.border";
+}
+

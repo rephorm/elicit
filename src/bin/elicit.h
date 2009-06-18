@@ -24,7 +24,7 @@ struct Elicit {
     Evas_Object *main;
     Evas_Object *swatch, *shot;
     Evas_Object *draggie;
-    Evas_Object *shot_list, *swatch_list, *palette_list;
+    Evas_Object *shot_list, *swatch_list, *palette, *palette_frame;
 
     Evas_Object *cslider[6];
 
@@ -60,6 +60,7 @@ struct Elicit {
   {
     char *datadir;
     char *theme;
+    char *palette;
   } path;
 };
 

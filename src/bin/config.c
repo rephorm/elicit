@@ -18,6 +18,7 @@ elicit_config_load(Elicit *el)
 int
 elicit_config_save(Elicit *el)
 {
+  if (el->palette) palette_save(el->palette);
   // XXX save config to disk...
   return 0;
 }

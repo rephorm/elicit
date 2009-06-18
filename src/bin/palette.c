@@ -31,9 +31,11 @@ palette_free(Palette *palette)
 
   if (!palette) return;
   if (palette->name) eina_stringshare_del(palette->name);
+  if (palette->filename) eina_stringshare_del(palette->filename);
   EINA_LIST_FOREACH(palette->colors, l, c)
   {
-    color_free(c);
+    printf("unref (%d)\n", c->refcount);
+    color_unref(c);
   }
 
   eina_list_free(palette->colors);
@@ -130,28 +132,38 @@ palette_load(Palette *palette, const char *filename)
 {
   FILE *f;
   char buf[BUF_SIZE];
-  char name[BUF_SIZE];
+  char name[1024];
   int r, g, b;
   int columns;
+
+  name[0] = 0;
+
+  palette_filename_set(palette, filename);
+
   f = fopen(filename, "r");
   if (!f) return -1;
 
+  buf[0] = 0;
   fgets(buf, sizeof(buf), f);
   if (strncmp("GIMP Palette", buf, 12)) return -2;
 
-  palette->filename = eina_stringshare_add(filename);
   palette_clear(palette);
 
   while(fgets(buf, sizeof(buf), f))
   {
+    int num;
     if (buf[0] == '#' || buf[0] == '\n') continue;
-    else if (sscanf(buf, "%3d %3d %3d\t%s\n", &r, &g, &b, name) == 4)
+
+
+    num = sscanf(buf, "%3d %3d %3d\t%1024s\n", &r, &g, &b, name);
+    if (num >= 3)
     {
       Color *c = color_new();
       if (!c) goto error;
       color_rgba_set(c, r, g, b, 255);
-      color_name_set(c, name);
+      if (num == 4) color_name_set(c, name);
       palette_color_append(palette, c);
+      color_unref(c);
     }
     else if (sscanf(buf, "Name: %[^\n]\n", name))
       palette_name_set(palette, name);
@@ -234,6 +246,7 @@ palette_clear(Palette *palette)
 void
 palette_color_append(Palette *palette, Color *color)
 {
+  color_ref(color);
   palette->colors = eina_list_append(palette->colors, color);
 }
 
@@ -252,4 +265,5 @@ void
 palette_color_remove(Palette *palette, Color *color)
 {
   eina_list_remove(palette->colors, color);
+  color_unref(color);
 }

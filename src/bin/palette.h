@@ -33,5 +33,6 @@ Eina_List *palette_colors_get(Palette *palette);
 void palette_clear(Palette *palette);
 void palette_color_append(Palette *palette, Color *color);
 void palette_color_prepend(Palette *palette, Color *color);
+void palette_color_remove(Palette *palette, Color *color);
 
 #endif

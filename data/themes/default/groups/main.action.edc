@@ -11,6 +11,8 @@ images {
       description {
         state: "default" 0.0;
         color: 255 255 255 0;
+        rel1 { to: "action.icon"; }
+        rel2 { to: "action.text"; }
       }
       description {
         state: "visible" 0.0;
@@ -98,7 +100,6 @@ images {
       source: EVENT_PART; \
       after: "action.hide"; \
     }
-
 
     program {
       name: "action.show";

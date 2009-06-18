@@ -4,5 +4,7 @@ collections {
 #include "groups/button_close.edc"
 #include "groups/cslider.edc"
 #include "groups/band.edc"
+#include "groups/palette.swatch.edc"
+#include "groups/scrollframe.edc"
 
 }

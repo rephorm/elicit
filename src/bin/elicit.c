@@ -8,6 +8,8 @@
 #include "grab.h"
 #include "color.h"
 #include "cslider.h"
+#include "palette_view.h"
+#include "scrollframe.h"
 
 static char *cslider_part_names[6] = {
   "elicit.cslider.red",
@@ -27,7 +29,7 @@ static char *related_color_names[3] = {
 static int related_color_offset[3] = { 120, 180, 240 };
 
 static void
-elicit_cb_ee_resize(Ecore_Evas *ee)
+cb_ee_resize(Ecore_Evas *ee)
 {
   Elicit *el;
   int w, h;
@@ -48,27 +50,29 @@ elicit_cb_ee_resize(Ecore_Evas *ee)
 }
 
 static void
-elicit_cb_ee_mouse_in(Ecore_Evas *ee)
+cb_ee_mouse_in(Ecore_Evas *ee)
 {
   Elicit *el;
   el = ecore_evas_data_get(ee, "Elicit");
   if (!el) return;
 
+  return;
   edje_object_signal_emit(el->obj.main, "elicit,activate", "elicit");
 }
 
 static void
-elicit_cb_ee_mouse_out(Ecore_Evas *ee)
+cb_ee_mouse_out(Ecore_Evas *ee)
 {
   Elicit *el;
   el = ecore_evas_data_get(ee, "Elicit");
   if (!el) return;
 
+  return;
   edje_object_signal_emit(el->obj.main, "elicit,deactivate", "elicit");
 }
 
-void
-_elicit_cb_edje_signal(void *data, Evas_Object *obj, const char *emission, const char *source)
+static void
+cb_edje_signal(void *data, Evas_Object *obj, const char *emission, const char *source)
 {
   Elicit *el = data;
   char *signal;
@@ -80,6 +84,7 @@ _elicit_cb_edje_signal(void *data, Evas_Object *obj, const char *emission, const
     return;
 
   signal = strdup(emission);
+  printf("signal: %s\n", signal);
 
   tok = strtok(signal, ","); // first is 'elicit'
   tok = strtok(NULL, ",");
@@ -130,6 +135,26 @@ _elicit_cb_edje_signal(void *data, Evas_Object *obj, const char *emission, const
       elicit_scroll(el, source, 1);
     else if (tok && !strcmp(tok, "down"))
       elicit_scroll(el, source, -1);
+    else
+      invalid = 1;
+  }
+
+  else if (!strcmp(tok, "palette"))
+  {
+    tok = strtok(NULL, ",");
+    if (tok && !strcmp(tok, "add"))
+    {
+      Color *c;
+
+      c = color_clone(el->color);
+      palette_color_append(el->palette, c);
+      color_unref(c);
+      palette_view_changed(el->obj.palette); //XXX this should be a callback on the palette itself
+    }
+    else if (tok && !strcmp(tok, "remove"))
+    {} // XXX implement
+    else
+      invalid = 1;
   }
 
   else if (!strcmp(tok, "colorclass"))
@@ -153,8 +178,8 @@ _elicit_cb_edje_signal(void *data, Evas_Object *obj, const char *emission, const
   free(signal);
 }
 
-void
-_elicit_cb_edje_move(void *data, Evas_Object *obj, const char *emission, const char *source)
+static void
+cb_edje_move(void *data, Evas_Object *obj, const char *emission, const char *source)
 {
   Elicit *el = data;
 
@@ -164,6 +189,24 @@ _elicit_cb_edje_move(void *data, Evas_Object *obj, const char *emission, const c
 
   if (el->state.picking)
     elicit_pick(el);
+}
+
+static void
+cb_palette_color_selected(void *data, Evas_Object *obj, void *event_info)
+{
+  Elicit *el = data;
+  Color *c = event_info;
+
+  color_copy(c, el->color);
+}
+
+static void
+cb_palette_color_deleted(void *data, Evas_Object *obj, void *event_info)
+{
+  Palette *p;
+
+  p = palette_view_palette_get(obj);
+  palette_save(p);
 }
 
 void
@@ -252,16 +295,23 @@ elicit_new()
   ecore_evas_shaped_set(el->ee, 1);
 
   ecore_evas_data_set(el->ee, "Elicit", el);
-  ecore_evas_callback_resize_set(el->ee, elicit_cb_ee_resize);
-  ecore_evas_callback_mouse_in_set(el->ee, elicit_cb_ee_mouse_in);
-  ecore_evas_callback_mouse_out_set(el->ee, elicit_cb_ee_mouse_out);
+  ecore_evas_callback_resize_set(el->ee, cb_ee_resize);
+  ecore_evas_callback_mouse_in_set(el->ee, cb_ee_mouse_in);
+  ecore_evas_callback_mouse_out_set(el->ee, cb_ee_mouse_out);
 
   el->obj.main = edje_object_add(el->evas);
 
+  /* color */
   el->color = color_new();
   //XXX save and load this in config
   color_rgba_set(el->color, 255, 255, 255, 255);
   color_callback_changed_add(el->color, cb_color_changed, el);
+
+  /* palette */
+  el->palette = palette_new();
+  //XXX correct palette path...
+  el->path.palette = strdup("/tmp/elicit.gpl");
+  palette_load(el->palette, el->path.palette);
 
   dir = br_find_data_dir(DATADIR);
   snprintf(buf, sizeof(buf), "%s/%s/", dir, PACKAGE);
@@ -297,9 +347,13 @@ elicit_free(Elicit *el)
   if (el->band)
     elicit_band_free(el->band);
 
+  if (el->palette)
+    palette_free(el->palette);
+
   IF_FREE(el->conf.theme);
   IF_FREE(el->path.theme);
   IF_FREE(el->path.datadir);
+  IF_FREE(el->path.palette);
 
   free(el);
 }
@@ -398,6 +452,7 @@ elicit_theme_swallow_objs(Elicit *el)
     }
   }
 
+  /* related colors */
   for (i = 0; i < 3; i++)
   {
     if (edje_object_part_exists(el->obj.main, related_color_names[i]))
@@ -412,6 +467,33 @@ elicit_theme_swallow_objs(Elicit *el)
       evas_object_del(el->obj.related[i]);
       el->obj.related[i] = NULL;
     }
+  }
+
+  /* palette */
+  if (edje_object_part_exists(el->obj.main, "elicit.palette"))
+  {
+    if (!el->obj.palette_frame)
+      el->obj.palette_frame = scrollframe_add(el->evas);
+
+    if (!el->obj.palette)
+    {
+      el->obj.palette = palette_view_add(el->evas);
+      palette_view_palette_set(el->obj.palette, el->palette);
+      evas_object_smart_callback_add(el->obj.palette, "selected", cb_palette_color_selected, el);
+      evas_object_smart_callback_add(el->obj.palette, "deleted", cb_palette_color_deleted, el);
+    }
+
+    scrollframe_theme_set(el->obj.palette_frame, el->path.theme, "elicit.scrollframe");
+
+    palette_view_theme_set(el->obj.palette, el->path.theme, "elicit.palette.swatch");
+    scrollframe_child_set(el->obj.palette_frame, el->obj.palette);
+    scrollframe_fill_policy_set(el->obj.palette_frame, 1, 0);
+    edje_object_part_swallow(el->obj.main, "elicit.palette", el->obj.palette_frame);
+  }
+  else if (el->obj.palette)
+  {
+    evas_object_del(el->obj.palette);
+    el->obj.palette = NULL;
   }
 }
 
@@ -481,8 +563,8 @@ elicit_theme_set(Elicit *el, const char *theme)
 
   elicit_theme_swallow_objs(el);
 
-  edje_object_signal_callback_add(el->obj.main, "elicit,*", "*", _elicit_cb_edje_signal, el);
-  edje_object_signal_callback_add(el->obj.main, "mouse,move", "*", _elicit_cb_edje_move, el);
+  edje_object_signal_callback_add(el->obj.main, "elicit,*", "*", cb_edje_signal, el);
+  edje_object_signal_callback_add(el->obj.main, "mouse,move", "*", cb_edje_move, el);
 
   color_changed(el->color);
 

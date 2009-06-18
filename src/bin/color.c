@@ -85,6 +85,8 @@ void color_copy(Color *from, Color *to)
   to->s = from->s;
   to->v = from->v;
   to->a = from->a;
+
+  color_changed(to);
 }
 
 /**

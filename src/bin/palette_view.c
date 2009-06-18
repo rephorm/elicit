@@ -1,9 +1,11 @@
-#include "Elicit.h"
+#include <Edje.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include "palette_view.h"
 
 static Evas_Smart *pv_smart;
 Evas_Smart_Class pv_class;
-
 
 static void pv_init();
 static void pv_add(Evas_Object *obj);
@@ -40,13 +42,14 @@ palette_view_palette_set(Evas_Object *obj, Palette *palette)
   API_ENTRY;
 
   pv->palette = palette;
+  printf("palette_set\n");
   pv_layout(obj);
 }
 
 Palette *
 palette_view_palette_get(Evas_Object *obj)
 {
-  API_ENTRY;
+  API_ENTRY NULL;
 
   return pv->palette;
 }
@@ -55,9 +58,18 @@ void
 palette_view_changed(Evas_Object *obj)
 {
   API_ENTRY;
+  printf("view changed\n");
   pv_layout(obj);
 }
 
+void
+palette_view_theme_set(Evas_Object *obj, const char *file, const char *group)
+{
+  API_ENTRY;
+ 
+  pv->theme.file = strdup(file);
+  pv->theme.group = strdup(group);
+}
 
 static void
 pv_init()
@@ -91,9 +103,21 @@ pv_add(Evas_Object *obj)
 static void
 pv_del(Evas_Object *obj)
 {
+  Eina_List *l;
+  Evas_Object *rect;
+
   API_ENTRY;
-  // XXX free rects themselves??
+
+  EINA_LIST_FOREACH(pv->rects, l, rect)
+  {
+    Color *c;
+    c = evas_object_data_get(rect, "Color");
+    color_unref(c);
+    evas_object_del(rect);
+  }
   eina_list_free(pv->rects);
+  if (pv->theme.file) free(pv->theme.file);
+  if (pv->theme.group) free(pv->theme.group);
   free(pv);
 }
 
@@ -153,7 +177,7 @@ pv_layout_timer(void *data)
 {
   Evas_Object *rect;
   Eina_List *colors, *lc, *lr, *lr_next;
-  Color *c;
+  Color *c, *cc;
   int cols, i;
   Evas_Object *clip;
   int x, y, w, h, adj;
@@ -165,7 +189,7 @@ pv_layout_timer(void *data)
   x = y = w = h = adj = 0;
 
   lr = NULL;
-  if (pv->palette) 
+  if (pv->palette && pv->theme.file && pv->theme.group)
   {
     clip = evas_object_clip_get(pv->smart_obj);
 
@@ -176,7 +200,7 @@ pv_layout_timer(void *data)
     w = pv->w / cols;
     h = pv->size;
 
-    adj = (pv->w - (w * cols)) / 2;
+    adj = (pv->w - (w * cols)) / 2 + 1;
 
     i = 0;
     lr = pv->rects;
@@ -192,13 +216,13 @@ pv_layout_timer(void *data)
         evas_object_event_callback_add(rect, EVAS_CALLBACK_MOUSE_OUT, cb_swatch_out, pv);
         evas_object_event_callback_add(rect, EVAS_CALLBACK_MOUSE_UP, cb_swatch_up, pv);
         if (clip) evas_object_clip_set(rect, clip);
-        elicit_theme_edje_object_set(rect, "elicit/swatch2");
+        edje_object_file_set(rect, pv->theme.file, pv->theme.group);
 
         pv->rects = eina_list_append(pv->rects, rect);
       }
 
       color_rgba_get(c, &r, &g, &b, NULL);
-      edje_object_color_class_set(rect, "swatch", r, g, b, 255, 0, 0, 0, 0, 0, 0, 0, 0);
+      edje_object_color_class_set(rect, "palette.swatch", r, g, b, 255, 0, 0, 0, 0, 0, 0, 0, 0);
 
       x = pv->x + w * (i % cols) + (i % cols ? adj : 0);
       y = pv->y + h * (i / cols);
@@ -208,6 +232,10 @@ pv_layout_timer(void *data)
       evas_object_resize(rect, w + ((i % cols == 0) ? adj : (i % cols == cols - 1) ? adj + 1 : 0), h);
       evas_object_show(rect);
 
+      cc = evas_object_data_get(rect, "Color");
+      if (cc) color_unref(cc);
+
+      color_ref(c);
       evas_object_data_set(rect, "Color", c);
       evas_object_smart_member_add(rect, pv->smart_obj);
 
@@ -223,6 +251,8 @@ pv_layout_timer(void *data)
   {
     lr_next = eina_list_next(lr);
     rect = eina_list_data_get(lr);
+    cc = evas_object_data_get(rect, "Color");
+    if (cc) color_unref(cc);
     evas_object_smart_member_del(rect);
     evas_object_del(rect);
     pv->rects = eina_list_remove_list(pv->rects, lr);
@@ -263,7 +293,18 @@ cb_swatch_up(void *data, Evas *evas, Evas_Object *obj, void *event_info)
   if (!c) return;
 
   if (ev->button == 1)
+  {
+    Eina_List *l;
+    Evas_Object *rect;
+    EINA_LIST_FOREACH(pv->rects, l, rect)
+    {
+      edje_object_signal_emit(rect, "elicit,swatch,deselect", "elicit");
+
+    }
+    edje_object_signal_emit(obj, "elicit,swatch,select", "elicit");
+    evas_object_raise(obj);
     evas_object_smart_callback_call(pv->smart_obj, "selected", c);
+  }
   else if (ev->button == 3)
   {
     palette_color_remove(pv->palette, c);
