@@ -12,8 +12,9 @@ images {
 #undef NUM_TABS
 #define NUM_TABS 4
 
+// Big long macro for a single tab
 #undef TAB
-#define TAB(N, NAME, ICON, W, H) \
+#define TAB(N, NAME, ICON, W, H, HELP_TEXT) \
   part { \
     name, "tab."NAME; \
     clip_to: "panel.clip"; \
@@ -68,6 +69,76 @@ images {
       visible: 1; \
       color: 255 255 255 255; \
     } \
+  } \
+  part { \
+    name: "action.icon.tab."NAME; \
+    type: IMAGE; \
+    description { \
+      state: "default" 0.0; \
+      min: W H; \
+      max: W H; \
+      fixed: 1 1; \
+      color: 255 255 255 0; \
+      rel1.to: "action.icon"; \
+      rel2.to: "action.icon"; \
+      image.normal: ICON; \
+    } \
+    description { \
+      state: "visible" 0.0; \
+      inherit: "default" 0.0; \
+      color: 255 255 255 255; \
+    } \
+  } \
+  program {				\
+    name: "tab."NAME".in";		\
+    signal: "mouse,in";		\
+    source: "tab."NAME;			\
+    action: STATE_SET "over" 0.0;	\
+    transition: DECELERATE 0.5;	\
+    target: "tab."NAME".icon";			\
+  }					\
+  program {				\
+    name: "tab."NAME".out";		\
+    signal: "mouse,out";		\
+    source: "tab."NAME;			\
+    action: STATE_SET "default" 0.0;\
+    transition: DECELERATE 0.5;	\
+    target: "tab."NAME".icon";			\
+  }	\
+  program { \
+    name: "tab."NAME".down"; \
+    signal: "mouse,down,1"; \
+    source: "tab."NAME; \
+    after: "tabs.hideall"; \
+    after: "tab."NAME".show"; \
+  } \
+  program { \
+    name: "tab."NAME".show"; \
+    action: STATE_SET "selected" 0.0; \
+    transition: LINEAR 0.0; \
+    target: "tab."NAME; \
+    target: "tab."NAME".clip"; \
+  } \
+  program { \
+    name: "action.tab."NAME".show"; \
+    signal: "mouse,in"; \
+    source: "tab."NAME; \
+    action: STATE_SET "visible" 0.0; \
+    target: "action.icon.tab."NAME; \
+    after: "action.tab."NAME".show.2"; \
+  } \
+  program { \
+    name: "action.tab."NAME".show.2"; \
+    script { \
+      set_text(PART:"action.text", HELP_TEXT); \
+      run_program(PROGRAM:"action.show"); \
+    } \
+  } \
+  program { \
+    name: "action.tab."NAME".hide"; \
+    signal: "mouse,out"; \
+    source: "tab."NAME; \
+    after: "action.hide"; \
   }
 
 part {
@@ -99,49 +170,6 @@ part {
   }
 }
 
-TAB(0, "data", "tab-data.png", 6, 7);
-TAB(1, "palette", "tab-swatch.png", 6, 6);
-TAB(2, "shots", "tab-shot.png", 6, 6);
-TAB(3, "misc", "tab-theme.png", 8, 8);
-
-#undef TAB_PROG
-#define TAB_PROG(NAME) \
-  program {				\
-    name: "tab."NAME".in";		\
-    signal: "mouse,in";		\
-    source: "tab."NAME;			\
-    action: STATE_SET "over" 0.0;	\
-    transition: DECELERATE 0.5;	\
-    target: "tab."NAME".icon";			\
-  }					\
-  program {				\
-    name: "tab."NAME".out";		\
-    signal: "mouse,out";		\
-    source: "tab."NAME;			\
-    action: STATE_SET "default" 0.0;\
-    transition: DECELERATE 0.5;	\
-    target: "tab."NAME".icon";			\
-  }	\
-  program { \
-    name: "tab."NAME".down"; \
-    signal: "mouse,down,1"; \
-    source: "tab."NAME; \
-    after: "tabs.hideall"; \
-    after: "tab."NAME".show"; \
-  } \
-  program { \
-    name: "tab."NAME".show"; \
-    action: STATE_SET "selected" 0.0; \
-    transition: LINEAR 0.0; \
-    target: "tab."NAME; \
-    target: "tab."NAME".clip"; \
-  } 
-
-TAB_PROG("data");
-TAB_PROG("palette");
-TAB_PROG("shots");
-TAB_PROG("misc");
-
 program {
   name, "tabs.hideall";
   action, STATE_SET "default" 0.0;
@@ -163,5 +191,11 @@ program {
   after: "tab.data.show";
 }
 
+
+
+TAB(0, "data", "tab-data.png", 6, 7, "Color Data");
+TAB(1, "palette", "tab-swatch.png", 6, 6, "Palette");
+TAB(2, "shots", "tab-shot.png", 6, 6, "Saved Shots");
+TAB(3, "misc", "tab-theme.png", 8, 8, "Miscellaneous");
 
 #include "main.tab.data.edc"

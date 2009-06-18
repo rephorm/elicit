@@ -20,9 +20,6 @@ images {
   image: "frame-base.png" COMP;
   image: "panel-main.png" COMP;
   image: "panel-shadow.png" COMP;
-
-  image: "dropper.png" COMP;
-  image: "target.png" COMP;
 }
 
 group {
@@ -119,52 +116,8 @@ group {
       }
     }
 
-    part {
-      name: "action.clip";
-      description {
-        state: "default" 0.0;
-        color: 255 255 255 0;
-      }
-      description {
-        state: "visible" 0.0;
-        color: 255 255 255 255;
-      }
-    }
 
-    part {
-      name: "action.icon";
-      type: RECT;
-      clip_to: "action.clip";
-      description {
-        state: "default" 0.0;
-        visible: 0;
-        min: 20 20;
-        max: 20 20;
-        rel1 { to: "elicit.swatch"; relative: 1 0; offset: 10 0; }
-        rel2 { to: "elicit.swatch"; relative: 1 1; offset: 30 -1; }
-        align: 1 0.5;
-      }
-    }
 
-    part {
-      name: "action.text";
-      clip_to: "action.clip";
-      type: TEXT;
-      description {
-        state: "default" 0.0;
-        rel1 { to: "action.icon"; relative: 1 0; offset: 2 2; }
-        rel2 { to_x: "button.close"; to_y: "action.icon"; relative: 0 1; offset: -5 -1; }
-        color: 140 140 140 255;
-        text {
-          text: "Magnify";
-          font: "Vera";
-          size: 10;
-          fit: 0 0;
-          min: 1 1;
-          align: 0.0 0.5;
-        }
-      }
-    }
 
     part {
       name: "elicit.shot";
@@ -185,27 +138,6 @@ group {
         rel2.to: "elicit.shot";
       }
     }
-    part {
-      name: "elicit.shot.icon";
-      clip_to: "action.clip";
-      mouse_events: 0;
-      description {
-        state: "default" 0.0;
-        min: 17 17;
-        max: 17 17;
-        color: 255 255 255 0;
-        rel1 { to: "action.icon"; offset: 2 2; }
-        rel2 { to: "action.icon"; }
-        image.normal: "target.png";
-      }
-      description {
-        state: "visible" 0.0;
-        inherit: "default" 0.0;
-        color: 255 255 255 255;
-      }
-    }
-
-
 
     part {
       name: "elicit.shot.frame";
@@ -239,26 +171,6 @@ group {
         color: 0 0 0 0;
         rel1.to: "elicit.swatch";
         rel2.to: "elicit.swatch";
-      }
-    }
-    part {
-      name: "elicit.swatch.icon";
-      clip_to: "action.clip";
-      mouse_events: 0;
-      description {
-        state: "default" 0.0;
-        min: 18 18;
-        max: 18 18;
-        fixed: 1 1;
-        color: 255 255 255 0;
-        rel1 { to: "action.icon"; offset: 2 2; }
-        rel2 { to: "action.icon"; }
-        image.normal: "dropper.png";
-      }
-      description {
-        state: "visible" 0.0;
-        inherit: "default" 0.0;
-        color: 255 255 255 255;
       }
     }
 
@@ -385,8 +297,6 @@ group {
         rel2 { to: "panel"; relative: 1 1; offset: -1 0; }
       }
     }
-    #include "main.panel.tabs.edc"
-
     part {
       name: "panel.sizer";
       dragable {
@@ -425,6 +335,9 @@ group {
       }
     }
 
+    #include "main.action.edc"
+    #include "main.panel.tabs.edc"
+
   }
 
   programs {
@@ -441,41 +354,6 @@ group {
       action: SIGNAL_EMIT "elicit,shoot,stop" "";
     }
 
-    program {
-      name: "elicit.shot.icon.hide";
-      signal: "mouse,out";
-      source: "elicit.shot.event";
-      after: "action.hide";
-    }
-
-    program {
-      name: "action.magnify";
-      signal: "mouse,in";
-      source: "elicit.shot.event";
-      script {
-        set_text(PART:"action.text", "Magnify Screen");
-        set_state(PART:"elicit.shot.icon", "visible", 0.0);
-        run_program(PROGRAM:"action.show");
-      }
-    }
-
-    program {
-      name: "action.color";
-      signal: "mouse,in";
-      source: "elicit.swatch.event";
-      script {
-        set_text(PART:"action.text", "Select Color");
-        set_state(PART:"elicit.swatch.icon", "visible", 0.0);
-        run_program(PROGRAM:"action.show");
-      }
-    }
-
-    program {
-      name: "action.color.hide";
-      signal: "mouse,out";
-      source: "elicit.swatch.event";
-      after: "action.hide";
-    }
 
     program {
       name: "elicit.pick.start";
@@ -507,39 +385,6 @@ group {
       action: STATE_SET "default" 0.0;
       target: "panel.border.left";
       target: "panel.border.close";
-      transition: DECELERATE 0.5;
-    }
-
-    program {
-      name: "action.close.in";
-      signal: "mouse,in";
-      source: "button.close";
-      script {
-        set_text(PART:"action.text", "Quit Elicit");
-        run_program(PROGRAM:"action.show");
-      }
-    }
-
-    program {
-      name: "action.close.out";
-      signal: "mouse,out";
-      source: "button.close";
-      after: "action.hide";
-    }
-
-    program {
-      name: "action.show";
-      action: STATE_SET "visible" 0.0;
-      target: "action.clip";
-      transition: DECELERATE 0.5;
-    }
-
-    program {
-      name: "action.hide";
-      action: STATE_SET "default" 0.0;
-      target: "action.clip";
-      target: "elicit.shot.icon";
-      target: "elicit.swatch.icon";
       transition: DECELERATE 0.5;
     }
 
