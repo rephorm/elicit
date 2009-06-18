@@ -22,7 +22,10 @@ static void _smart_clip_unset(Evas_Object *o);
 
 
 static void cb_drag(void *data, Evas_Object *obj, const char *signal, const char *source);
+static void cb_scroll(void *data, Evas_Object *obj, const char *signal, const char *source);
 static void cb_color_changed(Color *color, void *data);
+
+static char *cslider_labels[6] = { "R:", "G:", "B:", "H:", "S:", "V:" };
 
 Evas_Object *
 elicit_cslider_add(Evas *evas) 
@@ -48,6 +51,7 @@ elicit_cslider_theme_set(Evas_Object *o, const char *file, const char *group)
   }
 
   edje_object_signal_callback_add(cs->gui, "drag", "slider", cb_drag, cs);
+  edje_object_signal_callback_add(cs->gui, "elicit,scroll,*", "*", cb_scroll, cs);
 
   if (edje_object_part_exists(cs->gui, "spectrum"))
   {
@@ -80,6 +84,10 @@ elicit_cslider_color_set(Evas_Object *o, Color *color, Color_Type type)
 
   cs->type = type;
 
+  if (edje_object_part_exists(cs->gui, "label")) {
+    edje_object_part_text_set(cs->gui, "label", cslider_labels[cs->type]);
+  }
+
   color_callback_changed_add(cs->color, cb_color_changed, cs);
 
 }
@@ -110,6 +118,40 @@ cb_drag(void *data, Evas_Object *obj, const char *signal, const char *source)
 }
 
 static void
+cb_scroll(void *data, Evas_Object *obj, const char *signal, const char *source)
+{
+  Elicit_Cslider *cs = data;
+
+  int dir;
+  int r, g, b;
+  float h, s, v;
+
+  if (!strcmp(signal+14, "up")) 
+    dir = 1;
+  else if (!strcmp(signal+14, "down"))
+    dir = -1;
+  else
+    return;
+
+  color_rgba_get(cs->color, &r, &g, &b, NULL);
+  color_hsva_get(cs->color, &h, &s, &v, NULL);
+
+  if (cs->type == COLOR_TYPE_RED)
+    color_rgba_set(cs->color, r + dir, -1, -1, -1);
+  else if (cs->type == COLOR_TYPE_GREEN)
+    color_rgba_set(cs->color, -1, g + dir, -1, -1);
+  else if (cs->type == COLOR_TYPE_BLUE)
+    color_rgba_set(cs->color, -1, -1, b + dir, -1);
+  else if (cs->type == COLOR_TYPE_HUE)
+    color_hsva_set(cs->color, h + dir, -1, -1, -1);
+  else if (cs->type == COLOR_TYPE_SATURATION)
+    color_hsva_set(cs->color, -1, s + 0.01 * dir, -1, -1);
+  else if (cs->type == COLOR_TYPE_VALUE)
+    color_hsva_set(cs->color, -1, -1, v + 0.01 * dir, -1);
+
+}
+
+static void
 cb_color_changed(Color *color, void *data)
 {
   Elicit_Cslider *cs = data;
@@ -130,7 +172,7 @@ cb_color_changed(Color *color, void *data)
   {
     case COLOR_TYPE_RED:
       val = r/255.0;
-      snprintf(buf, sizeof(buf), "%d", (int)val);
+      snprintf(buf, sizeof(buf), "%d", r);
       if (cs->spectrum)
       {
         evas_object_gradient_color_stop_add(cs->spectrum, 0, g, b, 255, 1);
@@ -139,7 +181,7 @@ cb_color_changed(Color *color, void *data)
       break;
     case COLOR_TYPE_GREEN:
       val = g/255.0;
-      snprintf(buf, sizeof(buf), "%d", (int)val);
+      snprintf(buf, sizeof(buf), "%d", g);
       if (cs->spectrum)
       {
         evas_object_gradient_color_stop_add(cs->spectrum, r, 0, b, 255, 1);
@@ -148,7 +190,7 @@ cb_color_changed(Color *color, void *data)
       break;
     case COLOR_TYPE_BLUE:
       val = b/255.0;
-      snprintf(buf, sizeof(buf), "%d", (int)val);
+      snprintf(buf, sizeof(buf), "%d", b);
       if (cs->spectrum)
       {
         evas_object_gradient_color_stop_add(cs->spectrum, r, g, 0, 255, 1);
@@ -157,7 +199,7 @@ cb_color_changed(Color *color, void *data)
       break;
     case COLOR_TYPE_HUE:
       val = h/360.0;
-      snprintf(buf, sizeof(buf), "%.1f", val);
+      snprintf(buf, sizeof(buf), "%d", (int)h);
       if (cs->spectrum)
       {
         int max, min;
@@ -173,7 +215,7 @@ cb_color_changed(Color *color, void *data)
       break;
     case COLOR_TYPE_SATURATION:
       val = s;
-      snprintf(buf, sizeof(buf), "%.1f", val);
+      snprintf(buf, sizeof(buf), "%.2f", val);
       if (cs->spectrum)
       {
         int r, g, b;
@@ -185,7 +227,7 @@ cb_color_changed(Color *color, void *data)
       break;
     case COLOR_TYPE_VALUE:
       val = v;
-      snprintf(buf, sizeof(buf), "%.1f", val);
+      snprintf(buf, sizeof(buf), "%.2f", val);
       if (cs->spectrum)
       {
         int r, g, b;
@@ -199,6 +241,7 @@ cb_color_changed(Color *color, void *data)
       break;
   }
 
+  edje_object_part_text_set(cs->gui, "val", buf);
   edje_object_part_drag_value_set(cs->gui, "slider", val, val);
 }
 
