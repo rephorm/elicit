@@ -1,6 +1,7 @@
 *.o
 *.in
 .deps
+.edj
 
 Makefile
 aclocal.m4
