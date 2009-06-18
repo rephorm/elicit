@@ -3,12 +3,15 @@
 
 #define COLOR_HEX_HASH 1
 #define COLOR_HEX_ALPHA 2
+#define COLOR_HEX_CAPS 4
 
 #include <Eina.h>
 
 typedef struct Color Color;
 typedef enum Color_Mode Color_Mode;
 typedef enum Color_Type Color_Type;
+typedef enum Color_Hex_Option Color_Hex_Option;
+
 enum Color_Mode
 {
   COLOR_MODE_RGBA,

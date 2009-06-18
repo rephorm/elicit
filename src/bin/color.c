@@ -266,21 +266,26 @@ color_hex_set(Color *color, const char *hex)
  * Get the RGB(A) value of a color as a hex string with an optional 
  * leading '#'
  * @param color
- * @param with_hash - whether to include leading '#' or not
- * @param with_alpha - whether to include alpha values or not
+ * @param options - bitmap of the following options
+ *        COLOR_HEX_HASH - include hash 
+ *        COLOR_HEX_ALPHA - include alph
  */
 const char *
 color_hex_get(Color *color, int options)
 {
   static char buf[10];
-  char *formats[4] = {
+  char *formats[8] = {
     "%02x%02x%02x",
     "#%02x%02x%02x",
     "%02x%02x%02x%02x",
-    "#%02x%02x%02x%02x"
+    "#%02x%02x%02x%02x",
+    "%02X%02X%02X",
+    "#%02X%02X%02X",
+    "%02X%02X%02X%02X",
+    "#%02X%02X%02X%02X"
   };
 
-  sprintf(buf, formats[options & 0x3], color->r, color->g, color->b, color->a);
+  sprintf(buf, formats[options & 7], color->r, color->g, color->b, color->a);
   return buf;
 }
 
