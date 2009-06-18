@@ -25,7 +25,7 @@ images {
 group {
   name: "elicit.main";
 
-  min: 300 120;
+  min: 285 160;
 
   parts {
     part {
@@ -116,9 +116,6 @@ group {
       }
     }
 
-
-
-
     part {
       name: "elicit.shot";
       type: SWALLOW;
@@ -173,7 +170,6 @@ group {
         rel2.to: "elicit.swatch";
       }
     }
-
 
     part {
       name: "elicit.swatch.frame";
