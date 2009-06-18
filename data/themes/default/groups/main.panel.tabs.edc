@@ -61,7 +61,7 @@ images {
       visible: 0; \
       color: 255 255 255 0; \
       rel1 { to: "panel.tabs.bg"; relative: 1 0; offset: 1 0; } \
-      rel2.to: "panel"; \
+      rel2 { to: "panel"; offset: -1 -2; } \
     } \
     description { \
       state: "selected" 0.0; \
