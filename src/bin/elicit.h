@@ -25,6 +25,10 @@ struct Elicit {
     Evas_Object *swatch, *shot;
     Evas_Object *draggie;
     Evas_Object *shot_list, *swatch_list, *palette_list;
+
+    struct {
+      Evas_Object *red, *green, *blue, *hue, *saturation, *value;
+    } cslider;
   } obj;
 
   Color *color;
@@ -71,7 +75,8 @@ void elicit_libs_shutdown();
 
 void elicit_shoot(Elicit *el);
 void elicit_pick(Elicit *el);
-void elicit_swatch_color_update(Elicit *el);
+void elicit_color_update(Elicit *el);
+void elicit_scroll(Elicit *el, const char *source, int dir);
 
 #define IF_FREE(x) if (x) free(x);
 #endif

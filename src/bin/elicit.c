@@ -7,6 +7,7 @@
 #include "zoom.h"
 #include "grab.h"
 #include "color.h"
+#include "cslider.h"
 
 void
 _elicit_cb_resize(Ecore_Evas *ee)
@@ -52,7 +53,7 @@ _elicit_cb_edje_signal(void *data, Evas_Object *obj, const char *emission, const
   if (!strcmp(tok, "shoot"))
   {
     tok = strtok(NULL, ",");
-    if (!strcmp(tok, "start"))
+    if (tok && !strcmp(tok, "start"))
     {
       if (!el->band)
         el->band = elicit_band_new();
@@ -60,7 +61,7 @@ _elicit_cb_edje_signal(void *data, Evas_Object *obj, const char *emission, const
       elicit_band_show(el->band);
       el->state.shooting = 1;
     }
-    else if (!strcmp(tok, "stop"))
+    else if (tok && !strcmp(tok, "stop"))
     {
       elicit_band_hide(el->band);
       el->state.shooting = 0;
@@ -73,12 +74,21 @@ _elicit_cb_edje_signal(void *data, Evas_Object *obj, const char *emission, const
   else if (!strcmp(tok, "pick")) 
   {
     tok = strtok(NULL, ",");
-    if (!strcmp(tok, "start"))
+    if (tok && !strcmp(tok, "start"))
       el->state.picking = 1;
-    else if (!strcmp(tok, "stop"))
+    else if (tok && !strcmp(tok, "stop"))
       el->state.picking = 0;
     else
       invalid = 1;
+  }
+
+  else if (!strcmp(tok, "scroll"))
+  {
+    tok = strtok(NULL, ",");
+    if (tok && !strcmp(tok, "up"))
+      elicit_scroll(el, source, 1);
+    else if (tok && !strcmp(tok, "down"))
+      elicit_scroll(el, source, -1);
   }
 
   /* quit */
@@ -106,6 +116,39 @@ _elicit_cb_edje_move(void *data, Evas_Object *obj, const char *emission, const c
 
   if (el->state.picking)
     elicit_pick(el);
+}
+
+void
+_elicit_cb_edje_drag(void *data, Evas_Object *obj, const char *emission, const char *source)
+{
+  Elicit *el = data;
+  const char *c;
+
+  double drag;
+  int dir;
+
+  printf("drag: %s -- %s\n", emission, source);
+
+  if (!strncmp(source, "elicit.color", 12))
+  {
+    c = source + 13;
+
+    dir = edje_object_part_drag_dir_get(obj, source);
+    if (dir)
+      edje_object_part_drag_value_get(obj, source, &drag, NULL);
+    else
+      edje_object_part_drag_value_get(obj, source, NULL, &drag);
+
+    if (!strncmp(c, "red", 3))
+    {
+      color_rgba_set(el->color, drag * 255, -1, -1, -1);
+      printf("red drag\n");
+    }
+    else if (!strncmp(c, "green", 5))
+    {
+      printf("green drag\n");
+    }
+  }
 }
 
 void
@@ -142,22 +185,46 @@ elicit_pick(Elicit *el)
   int data;
   ecore_x_pointer_last_xy_get(&x, &y);
   if (elicit_grab_region(x, y, 1, 1, 0, &data))
-  {
     color_argb_int_set(el->color, data);
-    elicit_swatch_color_update(el);
-  }
 }
 
 void
-elicit_swatch_color_update(Elicit *el)
+elicit_scroll(Elicit *el, const char *source, int dir)
 {
-  int r, g, b;
-
-  color_rgba_get(el->color, &r, &g, &b, NULL);
-  evas_object_color_set(el->obj.swatch, r, g, b, 255);
-  evas_object_show(el->obj.swatch);
 }
 
+static void
+cb_color_changed(Color *color, void *data)
+{
+  int r,g,b;
+  float h,s,v;
+  char buf[10];
+  Elicit *el = data;
+
+  color_rgba_get(color, &r, &g, &b, NULL);
+  color_hsva_get(color, &h, &s, &v, NULL);
+
+  if (el->obj.swatch)
+    evas_object_color_set(el->obj.swatch, r, g, b, 255);
+
+  //XXX send message to theme with new color values?
+  if (el->obj.main)
+  {
+    snprintf(buf, sizeof(buf), "%d", r);
+    edje_object_part_text_set(el->obj.main, "elicit.color.red:val", buf);
+    edje_object_part_drag_value_set(el->obj.main, "elicit.color.red:slider", r/255.0, r/255.0);
+    snprintf(buf, sizeof(buf), "%d", g);
+    edje_object_part_text_set(el->obj.main, "elicit.color.green:val", buf);
+    snprintf(buf, sizeof(buf), "%d", b);
+    edje_object_part_text_set(el->obj.main, "elicit.color.blue:val", buf);
+    snprintf(buf, sizeof(buf), "%.1f", h);
+    edje_object_part_text_set(el->obj.main, "elicit.color.hue:val", buf);
+    snprintf(buf, sizeof(buf), "%.1f", s);
+    edje_object_part_text_set(el->obj.main, "elicit.color.saturation:val", buf);
+    snprintf(buf, sizeof(buf), "%.1f", v);
+    edje_object_part_text_set(el->obj.main, "elicit.color.value:val", buf);
+  }
+}
 
 Elicit *
 elicit_new()
@@ -182,6 +249,7 @@ elicit_new()
   el->obj.main = edje_object_add(el->evas);
 
   el->color = color_new();
+  color_callback_changed_add(el->color, cb_color_changed, el);
 
   dir = br_find_data_dir(DATADIR);
   snprintf(buf, sizeof(buf), "%s/%s/", dir, PACKAGE);
@@ -200,7 +268,7 @@ void
 elicit_free(Elicit *el)
 {
   if (el->color)
-    color_free(el->color);
+    color_unref(el->color);
 
   if (el->obj.main)
     evas_object_del(el->obj.main);
@@ -277,33 +345,36 @@ elicit_theme_swallow_objs(Elicit *el)
     edje_object_part_swallow(el->obj.main, "elicit.shot", el->obj.shot);
 
   }
-  else
+  else if (el->obj.shot)
   {
-    if (el->obj.shot)
-    {
-      evas_object_del(el->obj.shot);
-      el->obj.shot = NULL;
-    }
+    evas_object_del(el->obj.shot);
+    el->obj.shot = NULL;
   }
-
 
   if (edje_object_part_exists(el->obj.main, "elicit.swatch"))
   {
     if (!el->obj.swatch)
-    {
       el->obj.swatch = evas_object_rectangle_add(el->evas);
-      elicit_swatch_color_update(el);
-    }
 
     edje_object_part_swallow(el->obj.main, "elicit.swatch", el->obj.swatch);
   }
-  else
+  else if (el->obj.swatch)
   {
-    if (el->obj.swatch)
-    {
-      evas_object_del(el->obj.swatch);
-      el->obj.swatch = NULL;
-    }
+    evas_object_del(el->obj.swatch);
+    el->obj.swatch = NULL;
+  }
+
+  if (edje_object_part_exists(el->obj.main, "elicit.cslider.red"))
+  {
+    el->obj.cslider.red = elicit_cslider_add(el->evas);
+    elicit_cslider_theme_set(el->obj.cslider.red, el->path.theme, "elicit.cslider");
+    elicit_cslider_color_set(el->obj.cslider.red, el->color, COLOR_TYPE_RED);
+    edje_object_part_swallow(el->obj.main, "elicit.cslider.red", el->obj.cslider.red);
+  }
+  else if (el->obj.cslider.red)
+  {
+    evas_object_del(el->obj.cslider.red);
+    el->obj.cslider.red = NULL;
   }
 }
 
@@ -365,6 +436,9 @@ elicit_theme_set(Elicit *el, const char *theme)
 
   edje_object_signal_callback_add(el->obj.main, "elicit,*", "*", _elicit_cb_edje_signal, el);
   edje_object_signal_callback_add(el->obj.main, "mouse,move", "*", _elicit_cb_edje_move, el);
+  edje_object_signal_callback_add(el->obj.main, "drag", "*", _elicit_cb_edje_drag, el);
+
+  color_changed(el->color);
 
   return 1;
 }

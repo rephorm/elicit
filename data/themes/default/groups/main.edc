@@ -20,6 +20,8 @@ images {
 group {
   name: "elicit.main";
 
+  min: 200 120;
+
   parts {
     part {
       name: "base";
@@ -154,6 +156,7 @@ group {
         state: "default" 0.0;
         min: 18 18;
         max: 18 18;
+        fixed: 1 1;
         color: 255 255 255 128;
         rel1.to: "elicit.swatch";
         rel1.offset: 2 2;
@@ -219,6 +222,16 @@ group {
         rel2 { to: "base.buttons"; relative: 1 1; offset: -1 -1; }
       }
     }
+
+    part {
+      name: "elicit.cslider.red";
+      type: SWALLOW;
+      description {
+        state: "default" 0.0;
+        rel1.to: "base.buttons";
+        rel2 { to: button.close; relative: 0 1; }
+      }
+    }
   }
 
   programs {
@@ -246,6 +259,21 @@ group {
       signal: "mouse,up,1";
       source: "elicit.swatch.event";
       action: SIGNAL_EMIT "elicit,pick,stop" "";
+    }
+
+    program {
+      name: "test";
+      signal: "load";
+      source: "";
+      script {
+        part_set_text("elicit.color.red:label", "R:");
+        part_set_text("color.green:label", "G:");
+        part_set_text("color.blue:label", "B:");
+        part_set_text("color.hue:label", "H:");
+        part_set_text("color.saturtion:label", "S:");
+        part_set_text("color.value:label", "V:");
+      }
+
     }
 
   }

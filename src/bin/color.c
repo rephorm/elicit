@@ -17,7 +17,22 @@ color_new()
 
   color->r = color->g = color->b = color->a = 255;
   color->h = 0; color->s = 1; color->v = 1;
+  color->refcount = 1;
   return color;
+}
+
+void
+color_ref(Color *color)
+{
+  color->refcount++;
+}
+
+void
+color_unref(Color *color)
+{
+  color->refcount--;
+  if (color->refcount == 0)
+    color_free(color);
 }
 
 /**
@@ -27,8 +42,14 @@ color_new()
 void 
 color_free(Color *color)
 {
+  Color_Callback *cb;
+
   if (!color) return;
+
   if (color->name) eina_stringshare_del(color->name);
+  EINA_LIST_FREE(color->changed_callbacks, cb)
+    free(cb);
+
   free(color);
 }
 
@@ -123,6 +144,7 @@ color_rgba_set(Color *color, int r, int g, int b, int a)
   if (b >= 0) color->b = b;
   if (a >= 0) color->a = a;
   evas_color_rgb_to_hsv(color->r, color->g, color->b, &(color->h), &(color->s), &(color->v));
+  color_changed(color);
 }
 
 /**
@@ -144,6 +166,7 @@ color_hsva_set(Color *color, float h, float s, float v, int a)
   if (v >= 0) color->v = v;
   if (a >= 0) color->a = a;
   evas_color_hsv_to_rgb(color->h, color->s, color->v, &(color->r), &(color->g), &(color->b));
+  color_changed(color);
 }
 
 /**
@@ -261,4 +284,42 @@ color_hex_get(Color *color, int options)
   return buf;
 }
 
+void
+color_changed(Color *color)
+{
+  Eina_List *l;
+  Color_Callback *cb;
 
+  EINA_LIST_FOREACH(color->changed_callbacks, l, cb)
+  {
+    cb->func(color, cb->data);
+  }
+}
+
+void
+color_callback_changed_add(Color *color, Color_Callback_Func func, void *data)
+{
+  Color_Callback *cb;
+
+  cb = calloc(1, sizeof(Color_Callback));
+
+  cb->func = func;
+  cb->data = data;
+
+  color->changed_callbacks = eina_list_prepend(color->changed_callbacks, cb);
+}
+void
+color_callback_changed_del(Color *color, Color_Callback_Func func)
+{
+  Eina_List *l, *nl;
+  Color_Callback *cb;
+
+  EINA_LIST_FOREACH_SAFE(color->changed_callbacks, l, nl, cb)
+  {
+    if (cb->func == func)
+    {
+      color->changed_callbacks = eina_list_remove_list(color->changed_callbacks, l);
+      break;
+    }
+  }
+}

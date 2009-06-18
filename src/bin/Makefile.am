@@ -14,6 +14,7 @@ palette.c palette.h \
 grab.c grab.h \
 zoom.c zoom.h \
 band.c band.h \
+cslider.c cslider.h \
 types.h
 
 elicit_LDADD = @ELICIT_LIBS@
