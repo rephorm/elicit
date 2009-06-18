@@ -1,0 +1,50 @@
+part {
+  name: "panel.data.clip";
+  type: RECT;
+  clip_to: "panel.clip";
+  description {
+    state: "default" 0.0;
+    rel1.to: "panel";
+    rel2.to: "panel";
+  }
+}
+
+#define COLOR_SLIDER(NAME, NUM) \
+part { \
+  name: "elicit.cslider."NAME; \
+  type: SWALLOW; \
+  clip_to: "panel.data.clip"; \
+  description { \
+    state: "default" 0.0; \
+    min: 40 0; \
+    rel1 { to: "panel"; offset: 3 NUM*10; } \
+    rel2 { to: "panel"; relative: 1 0; offset: -7 NUM*10+6; } \
+  } \
+}
+
+COLOR_SLIDER("red", 1);
+COLOR_SLIDER("green", 2);
+COLOR_SLIDER("blue", 3);
+COLOR_SLIDER("hue", 5);
+COLOR_SLIDER("saturation", 6);
+COLOR_SLIDER("value", 7);
+
+part {
+  name: "elicit.color.hex";
+  type: TEXT;
+  clip_to: "panel.data.clip";
+  description {
+    state: "default" 0.0;
+    rel1 { to: "panel"; offset: 3 88; }
+    rel2 { to: "panel"; relative: 1 0; offset: -4 98; }
+    color: 140 140 140 255;
+    text {
+      text: "#ffffff";
+      font: "Vera";
+      size: 10;
+      fit: 0 0;
+      min: 1 0;
+      align: 0.5 0.5;
+    }
+  }
+}
