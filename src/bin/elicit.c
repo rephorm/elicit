@@ -18,6 +18,14 @@ static char *cslider_part_names[6] = {
   "elicit.cslider.value"
 };
 
+static char *related_color_names[3] = {
+  "elicit.color.triad1",
+  "elicit.color.complement",
+  "elicit.color.triad2"
+};
+
+static int related_color_offset[3] = { 120, 180, 240 };
+
 static void
 elicit_cb_resize(Ecore_Evas *ee)
 {
@@ -128,39 +136,6 @@ _elicit_cb_edje_move(void *data, Evas_Object *obj, const char *emission, const c
 }
 
 void
-_elicit_cb_edje_drag(void *data, Evas_Object *obj, const char *emission, const char *source)
-{
-  Elicit *el = data;
-  const char *c;
-
-  double drag;
-  int dir;
-
-  printf("drag: %s -- %s\n", emission, source);
-
-  if (!strncmp(source, "elicit.color", 12))
-  {
-    c = source + 13;
-
-    dir = edje_object_part_drag_dir_get(obj, source);
-    if (dir)
-      edje_object_part_drag_value_get(obj, source, &drag, NULL);
-    else
-      edje_object_part_drag_value_get(obj, source, NULL, &drag);
-
-    if (!strncmp(c, "red", 3))
-    {
-      color_rgba_set(el->color, drag * 255, -1, -1, -1);
-      printf("red drag\n");
-    }
-    else if (!strncmp(c, "green", 5))
-    {
-      printf("green drag\n");
-    }
-  }
-}
-
-void
 elicit_shoot(Elicit *el)
 {
   int x, y;
@@ -206,11 +181,24 @@ cb_color_changed(Color *color, void *data)
 {
   int r,g,b;
   Elicit *el = data;
+  int i;
 
   color_rgba_get(color, &r, &g, &b, NULL);
 
   if (el->obj.swatch)
     evas_object_color_set(el->obj.swatch, r, g, b, 255);
+
+  for (i = 0; i < 3; i++)
+  {
+    if (el->obj.related[i])
+    {
+      float h,s,v;
+      color_hsva_get(color, &h, &s, &v, NULL);
+      h = ((int)h + related_color_offset[i]) % 360;
+      evas_color_hsv_to_rgb(h,s,v,&r,&g,&b);
+      evas_object_color_set(el->obj.related[i], r, g, b, 255);
+    }
+  }
 
   edje_object_part_text_set(el->obj.main, "elicit.color.hex", color_hex_get(el->color, COLOR_HEX_HASH | COLOR_HEX_CAPS));
 }
@@ -238,6 +226,8 @@ elicit_new()
   el->obj.main = edje_object_add(el->evas);
 
   el->color = color_new();
+  //XXX save and load this in config
+  color_rgba_set(el->color, 255, 255, 255, 255);
   color_callback_changed_add(el->color, cb_color_changed, el);
 
   dir = br_find_data_dir(DATADIR);
@@ -322,6 +312,7 @@ elicit_theme_swallow_objs(Elicit *el)
 {
   int i;
 
+  /* magnified screen shot */
   if (edje_object_part_exists(el->obj.main, "elicit.shot"))
   {
     //XXX wrap in pan widget?
@@ -341,6 +332,7 @@ elicit_theme_swallow_objs(Elicit *el)
     el->obj.shot = NULL;
   }
 
+  /* main swatch */
   if (edje_object_part_exists(el->obj.main, "elicit.swatch"))
   {
     if (!el->obj.swatch)
@@ -354,6 +346,8 @@ elicit_theme_swallow_objs(Elicit *el)
     el->obj.swatch = NULL;
   }
 
+
+  /* color slider */
   for (i = 0; i < 6; i++)
   {
 
@@ -370,11 +364,29 @@ elicit_theme_swallow_objs(Elicit *el)
       el->obj.cslider[i] = NULL;
     }
   }
+
+  for (i = 0; i < 3; i++)
+  {
+    if (edje_object_part_exists(el->obj.main, related_color_names[i]))
+    {
+      if (!el->obj.related[i])
+        el->obj.related[i] = evas_object_rectangle_add(el->evas);
+
+      edje_object_part_swallow(el->obj.main, related_color_names[i], el->obj.related[i]);
+    }
+    else if (el->obj.related[i])
+    {
+      evas_object_del(el->obj.related[i]);
+      el->obj.related[i] = NULL;
+    }
+  }
 }
 
 void
 elicit_theme_unswallow_objs(Elicit *el)
 {
+  int i;
+
   if (!el->obj.main)
     return;
 
@@ -383,6 +395,14 @@ elicit_theme_unswallow_objs(Elicit *el)
 
   if (el->obj.swatch)
     edje_object_part_unswallow(el->obj.main, el->obj.swatch);
+
+  for (i = 0; i < 6; i++)
+    if (el->obj.cslider[i])
+      edje_object_part_unswallow(el->obj.main, el->obj.cslider[i]);
+
+  for (i = 0; i < 3; i++)
+    if (el->obj.related)
+      edje_object_part_unswallow(el->obj.main, el->obj.related[i]);
 }
 
 int
@@ -430,7 +450,6 @@ elicit_theme_set(Elicit *el, const char *theme)
 
   edje_object_signal_callback_add(el->obj.main, "elicit,*", "*", _elicit_cb_edje_signal, el);
   edje_object_signal_callback_add(el->obj.main, "mouse,move", "*", _elicit_cb_edje_move, el);
-  edje_object_signal_callback_add(el->obj.main, "drag", "*", _elicit_cb_edje_drag, el);
 
   color_changed(el->color);
 

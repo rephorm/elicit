@@ -27,6 +27,8 @@ struct Elicit {
     Evas_Object *shot_list, *swatch_list, *palette_list;
 
     Evas_Object *cslider[6];
+
+    Evas_Object *related[3];
   } obj;
 
   Color *color;
