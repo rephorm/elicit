@@ -257,12 +257,12 @@ palette_color_append(Palette *palette, Color *color)
 void
 palette_color_prepend(Palette *palette, Color *color)
 {
-  eina_list_prepend(palette->colors, color);
+  palette->colors = eina_list_prepend(palette->colors, color);
 }
 
 void
 palette_color_remove(Palette *palette, Color *color)
 {
-  eina_list_remove(palette->colors, color);
+  palette->colors = eina_list_remove(palette->colors, color);
   color_unref(color);
 }
