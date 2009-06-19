@@ -301,18 +301,7 @@ elicit_new()
 
   el->obj.main = edje_object_add(el->evas);
 
-  /* color */
-  el->color = color_new();
-  //XXX save and load this in config
-  color_rgba_set(el->color, 255, 255, 255, 255);
-  color_callback_changed_add(el->color, cb_color_changed, el);
-
-  /* palette */
-  el->palette = palette_new();
-  //XXX correct palette path...
-  el->path.palette = strdup("/tmp/elicit.gpl");
-  palette_load(el->palette, el->path.palette);
-
+  /* setup paths */
   dir = br_find_data_dir(DATADIR);
   snprintf(buf, sizeof(buf), "%s/%s/", dir, PACKAGE);
   if (!ecore_file_exists(buf))
@@ -322,6 +311,29 @@ elicit_new()
   }
   el->path.datadir = strdup(buf);
   free(dir);
+
+  if (getenv("HOME"))
+  {
+    snprintf(buf, sizeof(buf), "%s/.e/apps/elicit/", getenv("HOME"));
+    if (!ecore_file_is_dir(buf))
+      ecore_file_mkpath(buf);
+    el->path.confdir = strdup(buf);
+
+    snprintf(buf, sizeof(buf), "%s/.e/apps/elicit/elicit.conf", getenv("HOME"));
+    el->path.conffile = strdup(buf);
+
+    snprintf(buf, sizeof(buf), "%s/.e/apps/elicit/elicit.gpl", getenv("HOME"));
+    el->path.palette = strdup(buf);
+  }
+
+  /* color */
+  el->color = color_new();
+  color_callback_changed_add(el->color, cb_color_changed, el);
+
+  /* palette */
+  el->palette = palette_new();
+  palette_load(el->palette, el->path.palette);
+
 
   return el;
 }
@@ -353,7 +365,9 @@ elicit_free(Elicit *el)
   IF_FREE(el->conf.theme);
   IF_FREE(el->path.theme);
   IF_FREE(el->path.datadir);
+  IF_FREE(el->path.confdir);
   IF_FREE(el->path.palette);
+  IF_FREE(el->path.conffile);
 
   free(el);
 }
@@ -389,7 +403,6 @@ elicit_theme_find(Elicit *el, const char *theme)
   snprintf(buf, sizeof(buf), "%s/themes/%s.edj", el->path.datadir, theme);
   if (ecore_file_exists(buf) && edje_file_group_exists(buf, "elicit.main"))
     return buf;
-
 
   return NULL;
 }
@@ -535,6 +548,12 @@ elicit_theme_set(Elicit *el, const char *theme)
   }
   else
     path = elicit_theme_find(el, theme);
+
+  if (!path) {
+    fprintf(stderr, "[Elicit] Warning: theme \"%s\" not found, falling back to default.\n", theme);
+    theme = "default";
+    path = elicit_theme_find(el, theme);
+  }
 
   if (!path)
   {

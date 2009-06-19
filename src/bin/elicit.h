@@ -59,8 +59,11 @@ struct Elicit {
   struct
   {
     char *datadir;
+    char *confdir;
+
     char *theme;
     char *palette;
+    char *conffile;
   } path;
 };
 

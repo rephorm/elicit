@@ -2,28 +2,10 @@
 #include "elicit.h"
 #include "config.h"
 
-char *
-elicit_config_path()
-{
-  static char buf[PATH_MAX];
-
-  if (!getenv("HOME"))
-    return NULL;
-
-  /* Create data directory */
-  snprintf(buf, sizeof(buf), "%s/.e/apps/elicit/", getenv("HOME"));
-  if (!ecore_file_is_dir(buf))
-    ecore_file_mkpath(buf);
-
-  snprintf(buf, sizeof(buf), "%s/.e/apps/elicit/elicit.conf", getenv("HOME"));
-  return buf;
-}
-
 int
 elicit_config_load(Elicit *el)
 {
   FILE *f;
-  char *path;
   char buf[PATH_MAX];
   int line;
 
@@ -36,10 +18,9 @@ elicit_config_load(Elicit *el)
   el->conf.grid_visible = 1;
   el->conf.show_band = 1;
 
-  path = elicit_config_path();
-  if (!path) return 0;
+  if (!el->path.conffile) return 0;
 
-  f = fopen(path, "r");
+  f = fopen(el->path.conffile, "r");
   if (!f)
     return 0;
 
@@ -117,14 +98,12 @@ int
 elicit_config_save(Elicit *el)
 {
   FILE *f;
-  char *path;
 
   if (el->palette) palette_save(el->palette);
 
-  path = elicit_config_path();
-  if (!path) return 0;
+  if (!el->path.conffile) return 0;
 
-  f = fopen(path, "w");
+  f = fopen(el->path.conffile, "w");
   if (!f) return 0;
 
   fprintf(f, "theme: %s\n", el->conf.theme);
