@@ -42,7 +42,6 @@ palette_view_palette_set(Evas_Object *obj, Palette *palette)
   API_ENTRY;
 
   pv->palette = palette;
-  printf("palette_set\n");
   pv_layout(obj);
 }
 
@@ -58,7 +57,6 @@ void
 palette_view_changed(Evas_Object *obj)
 {
   API_ENTRY;
-  printf("view changed\n");
   pv_layout(obj);
 }
 

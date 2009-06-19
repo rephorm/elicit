@@ -34,7 +34,6 @@ palette_free(Palette *palette)
   if (palette->filename) eina_stringshare_del(palette->filename);
   EINA_LIST_FOREACH(palette->colors, l, c)
   {
-    printf("unref (%d)\n", c->refcount);
     color_unref(c);
   }
 
