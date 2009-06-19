@@ -330,3 +330,17 @@ color_callback_changed_del(Color *color, Color_Callback_Func func)
     }
   }
 }
+
+int
+color_rgba_compare(Color *c1, Color *c2)
+{
+  if (c1->r < c2->r) return -1;
+  if (c1->r > c2->r) return 1;
+  if (c1->g < c2->g) return -1;
+  if (c1->g > c2->g) return 1;
+  if (c1->b < c2->b) return -1;
+  if (c1->b > c2->b) return 1;
+  if (c1->a < c2->a) return -1;
+  if (c1->a > c2->a) return 1;
+  return 0;
+}
