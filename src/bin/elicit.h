@@ -50,8 +50,8 @@ struct Elicit {
     char *theme;
 
     int zoom_level;
-    char grid_visible : 1;
-    char show_band : 1;
+    unsigned char grid_visible : 1;
+    unsigned char show_band : 1;
 
     int changed;
   } conf;

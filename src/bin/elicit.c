@@ -526,6 +526,7 @@ elicit_theme_set(Elicit *el, const char *theme)
   const char *path;
   int w, h;
 
+  if (!theme) theme = "default";
   /* first check if full path is given */
   if (theme[0] == '/')
   {
@@ -544,8 +545,11 @@ elicit_theme_set(Elicit *el, const char *theme)
   if (el->path.theme) free(el->path.theme);
   el->path.theme = strdup(path);
 
-  if (el->conf.theme) free(el->conf.theme);
-  el->conf.theme = strdup(theme);
+  if (el->conf.theme != theme)
+  {
+    if (el->conf.theme) free(el->conf.theme);
+    el->conf.theme = strdup(theme);
+  }
 
   elicit_theme_unswallow_objs(el);
 

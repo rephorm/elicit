@@ -32,8 +32,7 @@ main(int argc, char **argv)
 
   elicit_config_load(el);
   parse_options(argc, argv, el);
-  if(!el->conf.theme)
-    elicit_theme_set(el, "default");
+  elicit_theme_set(el, el->conf.theme);
   elicit_show(el);
 
   ecore_main_loop_begin();
