@@ -1,6 +1,7 @@
 *.o
 *.in
 *.edj
+elicit-*.tar.gz
 .deps
 
 Makefile
