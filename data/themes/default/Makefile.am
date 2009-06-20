@@ -16,3 +16,4 @@ all: $(EDJ)
 	 -fd $(top_srcdir)/data/themes/$(THEME)/fonts \
 	 $< $@
 
+EXTRA_DIST = fonts img groups default.edc
