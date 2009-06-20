@@ -135,4 +135,3 @@ ACTION_PROG("elicit.swatch.event", "color", "Select Color")
 ACTION_PROG("panel.border.left", "panel", "Open Panel")
 ACTION_PROG("panel.border.close", "panel", "Close Panel")
 ACTION_PROG("button.close", "quit", "Quit Elicit")
-

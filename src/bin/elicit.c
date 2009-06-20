@@ -148,11 +148,20 @@ cb_edje_signal(void *data, Evas_Object *obj, const char *emission, const char *s
 
       c = color_clone(el->color);
       palette_color_append(el->palette, c);
-      color_unref(c);
-      palette_view_changed(el->obj.palette); //XXX this should be a callback on the palette itself
+      palette_view_select(el->obj.palette, c);
+      color_unref(c); // (the palette retains a ref)
     }
     else if (tok && !strcmp(tok, "remove"))
-    {} // XXX implement
+    {
+      Color *c;
+      c = palette_view_selected(el->obj.palette);
+
+      if (c)
+      {
+        palette_color_remove(el->palette, c);
+        palette_view_select(el->obj.palette, NULL);
+      }
+    }
     else
       invalid = 1;
   }
@@ -388,13 +397,11 @@ const char *
 elicit_theme_find(Elicit *el, const char *theme)
 {
   static char buf[PATH_MAX];
-  char *home;
 
   // check in home dir
-  home = getenv("HOME");
-  if (home)
+  if (el->path.confdir)
   {
-    snprintf(buf, sizeof(buf), "%s/.e/apps/elicit/themes/%s.edj", home, theme);
+    snprintf(buf, sizeof(buf), "%s/themes/%s.edj", el->path.confdir, theme);
     if (ecore_file_exists(buf) && edje_file_group_exists(buf, "elicit.main"))
       return buf;
   }

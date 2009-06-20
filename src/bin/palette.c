@@ -232,7 +232,7 @@ palette_clear(Palette *palette)
   Color *c;
 
   EINA_LIST_FOREACH(palette->colors, l, c)
-    color_free(c);
+    color_unref(c);
   eina_list_free(palette->colors);
   palette->colors = NULL;
 }

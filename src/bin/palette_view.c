@@ -64,9 +64,34 @@ void
 palette_view_theme_set(Evas_Object *obj, const char *file, const char *group)
 {
   API_ENTRY;
- 
+
+  if (pv->theme.file) free(pv->theme.file);
+  if (pv->theme.group) free(pv->theme.group);
+
   pv->theme.file = strdup(file);
   pv->theme.group = strdup(group);
+  pv->theme.changed = 1;
+}
+
+void
+palette_view_select(Evas_Object *obj, Color *c)
+{
+  API_ENTRY;
+
+  if (pv->selected) color_unref(pv->selected);
+
+  pv->selected = c;
+  if (pv->selected) color_ref(pv->selected);
+
+  palette_view_changed(obj);
+}
+
+Color *
+palette_view_selected(Evas_Object *obj)
+{
+  API_ENTRY NULL;
+
+  return pv->selected;
 }
 
 static void
@@ -95,6 +120,9 @@ pv_add(Evas_Object *obj)
   pv->rects = NULL;
   pv->size = 20;
 
+  pv->selector = edje_object_add(evas_object_evas_get(obj));
+  evas_object_smart_member_add(pv->selector, pv->smart_obj);
+
   evas_object_smart_data_set(obj, pv);
 }
 
@@ -114,8 +142,13 @@ pv_del(Evas_Object *obj)
     evas_object_del(rect);
   }
   eina_list_free(pv->rects);
+
+  if (pv->selected) color_unref(pv->selected);
+  if (pv->selector) evas_object_del(pv->selector);
+
   if (pv->theme.file) free(pv->theme.file);
   if (pv->theme.group) free(pv->theme.group);
+
   free(pv);
 }
 
@@ -149,6 +182,7 @@ pv_clip_set(Evas_Object *obj, Evas_Object *clip)
   EINA_LIST_FOREACH(pv->rects, l, rect) {
     evas_object_clip_set(rect, clip);
   }
+  evas_object_clip_set(pv->selector, clip);
 }
 
 static void
@@ -161,12 +195,14 @@ pv_clip_unset(Evas_Object *obj)
   EINA_LIST_FOREACH(pv->rects, l, rect) {
     evas_object_clip_unset(rect);
   }
+  evas_object_clip_unset(pv->selector);
 }
 
 static void
 pv_layout(Evas_Object *obj)
 {
   API_ENTRY;
+  if (pv->layout_timer) ecore_timer_del(pv->layout_timer);
   pv->layout_timer = ecore_timer_add(0.01, pv_layout_timer, pv);
 }
 
@@ -183,6 +219,11 @@ pv_layout_timer(void *data)
 
   pv = data;
   if (!pv) return 0;
+
+  if (pv->theme.changed)
+    edje_object_file_set(pv->selector, pv->theme.file, "elicit.palette.selector");
+  if (!pv->selected)
+    evas_object_hide(pv->selector);
 
   x = y = w = h = adj = 0;
 
@@ -205,6 +246,7 @@ pv_layout_timer(void *data)
     EINA_LIST_FOREACH(colors, lc, c)
     {
       int r,g,b;
+      int rw, rh;
 
       rect = eina_list_data_get(lr);
       if (!rect)
@@ -217,7 +259,10 @@ pv_layout_timer(void *data)
         edje_object_file_set(rect, pv->theme.file, pv->theme.group);
 
         pv->rects = eina_list_append(pv->rects, rect);
+        evas_object_smart_member_add(rect, pv->smart_obj);
       }
+      else if (pv->theme.changed)
+        edje_object_file_set(rect, pv->theme.file, pv->theme.group);
 
       color_rgba_get(c, &r, &g, &b, NULL);
       edje_object_color_class_set(rect, "palette.swatch", r, g, b, 255, 0, 0, 0, 0, 0, 0, 0, 0);
@@ -225,9 +270,11 @@ pv_layout_timer(void *data)
       x = pv->x + w * (i % cols) + (i % cols ? adj : 0);
       y = pv->y + h * (i / cols);
 
+      rw = w + ((i % cols == 0) ? adj : (i % cols == cols - 1) ? adj + 1 : 0);
+      rh = h;
       evas_object_move(rect, x, y);
       // left most gets corrected by 'adj', rightmost is corrected by adj + 1 to fill space (they are clipped, so going over is ok)
-      evas_object_resize(rect, w + ((i % cols == 0) ? adj : (i % cols == cols - 1) ? adj + 1 : 0), h);
+      evas_object_resize(rect, rw, rh);
       evas_object_show(rect);
 
       cc = evas_object_data_get(rect, "Color");
@@ -235,12 +282,20 @@ pv_layout_timer(void *data)
 
       color_ref(c);
       evas_object_data_set(rect, "Color", c);
-      evas_object_smart_member_add(rect, pv->smart_obj);
+
+      /* move selector to proper locations */
+      if (c == pv->selected)
+      {
+        evas_object_move(pv->selector, x, y);
+        evas_object_resize(pv->selector, rw, rh);
+        evas_object_show(pv->selector);
+      }
 
       //printf("place %s at (%d,%d) %d x %d\n", color_hex_get(c, 1), x, y, w, h);
       i++;
       lr = eina_list_next(lr);
     } 
+    evas_object_raise(pv->selector);
     evas_object_resize(pv->smart_obj, pv->w, y + h - pv->y);
   }
 
@@ -297,16 +352,18 @@ cb_swatch_up(void *data, Evas *evas, Evas_Object *obj, void *event_info)
     EINA_LIST_FOREACH(pv->rects, l, rect)
     {
       edje_object_signal_emit(rect, "elicit,swatch,deselect", "elicit");
-
     }
     edje_object_signal_emit(obj, "elicit,swatch,select", "elicit");
     evas_object_raise(obj);
+
+    palette_view_select(pv->smart_obj, c);
     evas_object_smart_callback_call(pv->smart_obj, "selected", c);
   }
   else if (ev->button == 3)
   {
     palette_color_remove(pv->palette, c);
     palette_view_changed(pv->smart_obj);
+    palette_view_select(pv->smart_obj, NULL);
     evas_object_smart_callback_call(pv->smart_obj, "deleted", c);
   }
 }
