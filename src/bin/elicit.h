@@ -81,6 +81,8 @@ void elicit_shoot(Elicit *el);
 void elicit_pick(Elicit *el);
 void elicit_color_update(Elicit *el);
 void elicit_scroll(Elicit *el, const char *source, int dir);
+void elicit_show_band_set(Elicit *el, int show);
+void elicit_grid_visible_set(Elicit *el, int visible);
 
 #define IF_FREE(x) if (x) free(x);
 #endif

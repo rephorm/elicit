@@ -105,7 +105,8 @@ cb_edje_signal(void *data, Evas_Object *obj, const char *emission, const char *s
       if (!el->band)
         el->band = elicit_band_new();
 
-      elicit_band_show(el->band);
+      if (el->conf.show_band)
+        elicit_band_show(el->band);
       el->state.shooting = 1;
     }
     else if (tok && !strcmp(tok, "stop"))
@@ -165,6 +166,40 @@ cb_edje_signal(void *data, Evas_Object *obj, const char *emission, const char *s
     }
     else
       invalid = 1;
+  }
+
+  else if (!strcmp(tok, "band"))
+  {
+    tok = strtok(NULL, ",");
+    if (tok && !strcmp(tok, "toggle"))
+    {
+      elicit_show_band_set(el, !el->conf.show_band);
+    }
+    else if (tok && !strcmp(tok, "on"))
+    {
+      elicit_show_band_set(el, 1);
+    }
+    else if (tok && !strcmp(tok, "off"))
+    {
+      elicit_show_band_set(el, 0);
+    }
+  }
+
+  else if (!strcmp(tok, "grid"))
+  {
+    tok = strtok(NULL, ",");
+    if (tok && !strcmp(tok, "toggle"))
+    {
+      elicit_grid_visible_set(el, !el->conf.grid_visible);
+    }
+    else if (tok && !strcmp(tok, "on"))
+    {
+      elicit_grid_visible_set(el, 1);
+    }
+    else if (tok && !strcmp(tok, "off"))
+    {
+      elicit_grid_visible_set(el, 0);
+    }
   }
 
   else if (!strcmp(tok, "colorclass"))
@@ -254,7 +289,7 @@ elicit_shoot(Elicit *el)
   if (x + w > dw) x = dw - w;
   if (y + h > dh) y = dh - h;
 
-  if (elicit_config_show_band_get(el))
+  if (el->conf.show_band)
     elicit_band_move_resize(el->band, x-1, y-1, w+2, h+2);
   elicit_zoom_grab(el->obj.shot, x, y, w, h, 0);
 }
@@ -272,6 +307,28 @@ elicit_pick(Elicit *el)
 void
 elicit_scroll(Elicit *el, const char *source, int dir)
 {
+}
+
+void
+elicit_grid_visible_set(Elicit *el, int visible)
+{
+  el->conf.grid_visible = visible;
+  elicit_zoom_grid_visible_set(el->obj.shot, visible);
+
+  if (visible)
+    edje_object_signal_emit(el->obj.main, "elicit,grid,on", "elicit");
+  else
+    edje_object_signal_emit(el->obj.main, "elicit,grid,off", "elicit");
+}
+
+void
+elicit_show_band_set(Elicit *el, int show)
+{
+  el->conf.show_band = show;
+  if (show)
+    edje_object_signal_emit(el->obj.main, "elicit,band,on", "elicit");
+  else
+    edje_object_signal_emit(el->obj.main, "elicit,band,off", "elicit");
 }
 
 static void
@@ -441,8 +498,8 @@ elicit_theme_swallow_objs(Elicit *el)
     if (!el->obj.shot)
     {
       el->obj.shot = elicit_zoom_add(el->evas);
-      elicit_zoom_zoom_set(el->obj.shot, elicit_config_zoom_level_get(el));
-      elicit_zoom_grid_visible_set(el->obj.shot, elicit_config_grid_visible_get(el));
+      elicit_zoom_zoom_set(el->obj.shot, el->conf.zoom_level);
+      elicit_zoom_grid_visible_set(el->obj.shot, el->conf.grid_visible);
     }
 
     edje_object_part_swallow(el->obj.main, "elicit.shot", el->obj.shot);
@@ -615,6 +672,17 @@ elicit_theme_set(Elicit *el, const char *theme)
   edje_object_signal_callback_add(el->obj.main, "mouse,move", "*", cb_edje_move, el);
 
   color_changed(el->color);
+
+  /* emit signals to set theme state */
+  if (el->conf.grid_visible)
+    edje_object_signal_emit(el->obj.main, "elicit,grid,on", "elicit");
+  else
+    edje_object_signal_emit(el->obj.main, "elicit,grid,off", "elicit");
+
+  if (el->conf.show_band)
+    edje_object_signal_emit(el->obj.main, "elicit,band,on", "elicit");
+  else
+    edje_object_signal_emit(el->obj.main, "elicit,band,off", "elicit");
 
   return 1;
 }

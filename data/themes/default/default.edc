@@ -9,5 +9,6 @@ collections {
 #include "groups/palette.swatch.edc"
 #include "groups/palette.selector.edc"
 #include "groups/scrollframe.edc"
+#include "groups/checkbox.edc"
 
 }
