@@ -59,7 +59,6 @@ cb_ee_mouse_in(Ecore_Evas *ee)
   el = ecore_evas_data_get(ee, "Elicit");
   if (!el) return;
 
-  return;
   edje_object_signal_emit(el->obj.main, "elicit,activate", "elicit");
 }
 
@@ -70,7 +69,6 @@ cb_ee_mouse_out(Ecore_Evas *ee)
   el = ecore_evas_data_get(ee, "Elicit");
   if (!el) return;
 
-  return;
   edje_object_signal_emit(el->obj.main, "elicit,deactivate", "elicit");
 }
 
