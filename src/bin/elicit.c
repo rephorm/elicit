@@ -11,7 +11,10 @@
 #include "palette_view.h"
 #include "scrollframe.h"
 
-static char *cslider_part_names[6] = {
+#define NUM_CSLIDERS 6
+#define NUM_RELATED_COLORS 3
+
+static char *cslider_part_names[NUM_CSLIDERS] = {
   "elicit.cslider.red",
   "elicit.cslider.green",
   "elicit.cslider.blue",
@@ -20,13 +23,13 @@ static char *cslider_part_names[6] = {
   "elicit.cslider.value"
 };
 
-static char *related_color_names[3] = {
+static char *related_color_names[NUM_RELATED_COLORS] = {
   "elicit.color.triad1",
   "elicit.color.complement",
   "elicit.color.triad2"
 };
 
-static int related_color_offset[3] = { 120, 180, 240 };
+static int related_color_offset[NUM_RELATED_COLORS] = { 120, 180, 240 };
 
 static void
 cb_ee_resize(Ecore_Evas *ee)
@@ -210,6 +213,20 @@ cb_palette_color_selected(void *data, Evas_Object *obj, void *event_info)
 }
 
 static void
+cb_related_color_select(void *data, Evas *e, Evas_Object *obj, void *event_info)
+{
+  Evas_Event_Mouse_Up *ev;
+  Elicit *el;
+  int r, g, b;
+
+  el = data;
+  ev = event_info;
+
+  evas_object_color_get(obj, &r, &g, &b, NULL);
+  color_rgba_set(el->color, r, g, b, 255);
+}
+
+static void
 cb_palette_color_deleted(void *data, Evas_Object *obj, void *event_info)
 {
   Palette *p;
@@ -271,7 +288,7 @@ cb_color_changed(Color *color, void *data)
   if (el->obj.swatch)
     evas_object_color_set(el->obj.swatch, r, g, b, 255);
 
-  for (i = 0; i < 3; i++)
+  for (i = 0; i < NUM_RELATED_COLORS; i++)
   {
     if (el->obj.related[i])
     {
@@ -455,7 +472,7 @@ elicit_theme_swallow_objs(Elicit *el)
 
 
   /* color slider */
-  for (i = 0; i < 6; i++)
+  for (i = 0; i < NUM_CSLIDERS; i++)
   {
 
     if (edje_object_part_exists(el->obj.main, cslider_part_names[i]))
@@ -473,12 +490,15 @@ elicit_theme_swallow_objs(Elicit *el)
   }
 
   /* related colors */
-  for (i = 0; i < 3; i++)
+  for (i = 0; i < NUM_RELATED_COLORS; i++)
   {
     if (edje_object_part_exists(el->obj.main, related_color_names[i]))
     {
       if (!el->obj.related[i])
+      {
         el->obj.related[i] = evas_object_rectangle_add(el->evas);
+        evas_object_event_callback_add(el->obj.related[i], EVAS_CALLBACK_MOUSE_UP, cb_related_color_select, el);
+      }
 
       edje_object_part_swallow(el->obj.main, related_color_names[i], el->obj.related[i]);
     }
@@ -531,11 +551,11 @@ elicit_theme_unswallow_objs(Elicit *el)
   if (el->obj.swatch)
     edje_object_part_unswallow(el->obj.main, el->obj.swatch);
 
-  for (i = 0; i < 6; i++)
+  for (i = 0; i < NUM_CSLIDERS; i++)
     if (el->obj.cslider[i])
       edje_object_part_unswallow(el->obj.main, el->obj.cslider[i]);
 
-  for (i = 0; i < 3; i++)
+  for (i = 0; i < NUM_RELATED_COLORS; i++)
     if (el->obj.related)
       edje_object_part_unswallow(el->obj.main, el->obj.related[i]);
 }
