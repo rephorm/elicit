@@ -40,7 +40,7 @@ struct Elicit {
 
   struct
   {
-    char shooting : 1;
+    char magnifying : 1;
     char picking  : 1;
   } state;
 
@@ -77,7 +77,7 @@ int elicit_theme_set(Elicit *el, const char *theme);
 int  elicit_libs_init(void);
 void elicit_libs_shutdown();
 
-void elicit_shoot(Elicit *el);
+void elicit_magnify(Elicit *el);
 void elicit_pick(Elicit *el);
 void elicit_color_update(Elicit *el);
 void elicit_scroll(Elicit *el, const char *source, int dir);

@@ -97,7 +97,7 @@ cb_edje_signal(void *data, Evas_Object *obj, const char *emission, const char *s
   }
 
   /* magnification */
-  if (!strcmp(tok, "shoot"))
+  if (!strcmp(tok, "magnify"))
   {
     tok = strtok(NULL, ",");
     if (tok && !strcmp(tok, "start"))
@@ -107,12 +107,12 @@ cb_edje_signal(void *data, Evas_Object *obj, const char *emission, const char *s
 
       if (el->conf.show_band)
         elicit_band_show(el->band);
-      el->state.shooting = 1;
+      el->state.magnifying = 1;
     }
     else if (tok && !strcmp(tok, "stop"))
     {
       elicit_band_hide(el->band);
-      el->state.shooting = 0;
+      el->state.magnifying = 0;
     }
     else
       invalid = 1;
@@ -229,8 +229,8 @@ cb_edje_move(void *data, Evas_Object *obj, const char *emission, const char *sou
   Elicit *el = data;
 
 
-  if (el->state.shooting)
-    elicit_shoot(el);
+  if (el->state.magnifying)
+    elicit_magnify(el);
 
   if (el->state.picking)
     elicit_pick(el);
@@ -269,7 +269,7 @@ cb_palette_color_deleted(void *data, Evas_Object *obj, void *event_info)
 }
 
 void
-elicit_shoot(Elicit *el)
+elicit_magnify(Elicit *el)
 {
   int x, y;
   int px, py;

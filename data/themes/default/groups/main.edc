@@ -344,16 +344,16 @@ group {
 
   programs {
     program {
-      name: "elicit.shoot.start";
+      name: "elicit.magnify.start";
       signal: "mouse,down,1";
       source: "elicit.shot.event";
-      action: SIGNAL_EMIT "elicit,shoot,start" "";
+      action: SIGNAL_EMIT "elicit,magnify,start" "";
     }
     program {
-      name: "elicit.shoot.stop";
+      name: "elicit.magnify.stop";
       signal: "mouse,up,1";
       source: "elicit.shot.event";
-      action: SIGNAL_EMIT "elicit,shoot,stop" "";
+      action: SIGNAL_EMIT "elicit,magnify,stop" "";
     }
 
 

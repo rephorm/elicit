@@ -58,7 +58,7 @@ elicit.scrollframe
           ,stop
           -
 
-    ,shoot
+    ,magnify
       ,start
       ,stop
 
