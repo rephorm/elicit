@@ -655,6 +655,7 @@ elicit_theme_set(Elicit *el, const char *theme)
   {
     if (!edje_file_group_exists(theme, "elicit.main"))
       return 0;
+    path = theme;
   }
   else
     path = elicit_theme_find(el, theme);

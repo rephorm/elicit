@@ -238,7 +238,7 @@ cb_color_changed(Color *color, void *data)
       }
       break;
     default:
-      break;
+      return;
   }
 
   edje_object_part_text_set(cs->gui, "val", buf);
