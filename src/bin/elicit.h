@@ -84,5 +84,7 @@ void elicit_scroll(Elicit *el, const char *source, int dir);
 void elicit_show_band_set(Elicit *el, int show);
 void elicit_grid_visible_set(Elicit *el, int visible);
 
+const char *elicit_data_file_find(const char *file);
+
 #define IF_FREE(x) if (x) free(x);
 #endif

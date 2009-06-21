@@ -174,7 +174,6 @@ elicit_shot_data_set(Evas_Object *o, void *data, int w, int h)
   sh->has_data = 1;
 }
 
-
 static void
 _smart_init(void)
 {
@@ -206,8 +205,7 @@ _smart_add(Evas_Object *o)
 {
   Elicit_Shot *sh;
   Evas *evas;
-  char buf[PATH_MAX];
-  char *datadir;
+  const char *grid_file;
 
   sh = calloc(1, sizeof(Elicit_Shot));
   if (!sh) return;
@@ -219,16 +217,17 @@ _smart_add(Evas_Object *o)
   sh->obj = evas_object_image_add(evas);
   evas_object_smart_member_add(sh->obj, o);
 
-  sh->grid = evas_object_image_add(evas);
-
-  datadir = br_find_data_dir(DATADIR);
-  snprintf(buf, sizeof(buf), "%s/%s/images/grid_cell.png", datadir, PACKAGE);
-  free(datadir);
-  if (!ecore_file_exists(buf))
-    snprintf(buf, sizeof(buf), "%s/%s/images/grid_cell.png", DATADIR, PACKAGE);
-
-  evas_object_image_file_set(sh->grid, buf, "");
-  evas_object_smart_member_add(sh->grid, o);
+  grid_file = elicit_data_file_find("images/grid_cell.png");
+  if (grid_file)
+  {
+    sh->grid = evas_object_image_add(evas);
+    evas_object_image_file_set(sh->grid, grid_file, "");
+    evas_object_smart_member_add(sh->grid, o);
+  }
+  else
+  {
+    fprintf(stderr, "[Elicit] Error: could not find grid_cell.png");
+  }
 
   sh->clip = evas_object_rectangle_add(evas);
   evas_object_clip_set(sh->obj, sh->clip);

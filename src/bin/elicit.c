@@ -687,6 +687,24 @@ elicit_theme_set(Elicit *el, const char *theme)
   return 1;
 }
 
+const char *
+elicit_data_file_find(const char *file)
+{
+  static char buf[PATH_MAX];
+  char *datadir;
+  datadir = br_find_data_dir(DATADIR);
+  snprintf(buf, sizeof(buf), "%s/%s/%s", datadir, PACKAGE, file);
+  free(datadir);
+  if (ecore_file_exists(buf))
+    return buf;
+
+  snprintf(buf, sizeof(buf), "%s/%s/%s", DATADIR, PACKAGE, file);
+  if (ecore_file_exists(buf))
+    return buf;
+
+  return NULL;
+}
+
 /**
  * Initialize libraries
  */
