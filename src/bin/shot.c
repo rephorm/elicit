@@ -83,17 +83,13 @@ elicit_shot_grid_visible_set(Evas_Object *o, int visible)
   sh->grid_visible = visible;
   gui = evas_object_name_find(evas_object_evas_get(o), "gui");
 
-  if (visible)
+  if (sh->has_data)
   {
-    if (sh->has_data) evas_object_show(sh->grid);
-    if (gui) edje_object_signal_emit(gui, "elicit,grid,shown", "Elicit");
+    if (visible)
+      evas_object_show(sh->grid);
+    else
+      evas_object_hide(sh->grid);
   }
-  else
-  {
-    if (sh->has_data) evas_object_hide(sh->grid);
-    if (gui) edje_object_signal_emit(gui, "elicit,grid,hidden", "Elicit");
-  }
-
 }
 
 void
