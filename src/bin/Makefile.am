@@ -13,7 +13,7 @@ color.c color.h \
 palette.c palette.h \
 palette_view.c palette_view.h \
 grab.c grab.h \
-zoom.c zoom.h \
+shot.c shot.h \
 band.c band.h \
 cslider.c cslider.h \
 pan.c pan.h \

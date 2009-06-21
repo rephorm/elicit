@@ -4,7 +4,7 @@
 #include <Ecore_File.h>
 #include "elicit.h"
 #include "config.h"
-#include "zoom.h"
+#include "shot.h"
 #include "grab.h"
 #include "color.h"
 #include "cslider.h"
@@ -277,7 +277,7 @@ elicit_magnify(Elicit *el)
   int w, h;
 
   ecore_x_pointer_last_xy_get(&px, &py);
-  elicit_zoom_size_get(el->obj.shot, &w, &h);
+  elicit_shot_size_get(el->obj.shot, &w, &h);
 
   x = px - .5 * w;
   y = py - .5 * h;
@@ -291,7 +291,7 @@ elicit_magnify(Elicit *el)
 
   if (el->conf.show_band)
     elicit_band_move_resize(el->band, x-1, y-1, w+2, h+2);
-  elicit_zoom_grab(el->obj.shot, x, y, w, h, 0);
+  elicit_shot_grab(el->obj.shot, x, y, w, h, 0);
 }
 
 void
@@ -313,7 +313,7 @@ void
 elicit_grid_visible_set(Elicit *el, int visible)
 {
   el->conf.grid_visible = visible;
-  elicit_zoom_grid_visible_set(el->obj.shot, visible);
+  elicit_shot_grid_visible_set(el->obj.shot, visible);
 
   if (visible)
     edje_object_signal_emit(el->obj.main, "elicit,grid,on", "elicit");
@@ -497,9 +497,9 @@ elicit_theme_swallow_objs(Elicit *el)
     //XXX wrap in pan widget?
     if (!el->obj.shot)
     {
-      el->obj.shot = elicit_zoom_add(el->evas);
-      elicit_zoom_zoom_set(el->obj.shot, el->conf.zoom_level);
-      elicit_zoom_grid_visible_set(el->obj.shot, el->conf.grid_visible);
+      el->obj.shot = elicit_shot_add(el->evas);
+      elicit_shot_zoom_set(el->obj.shot, el->conf.zoom_level);
+      elicit_shot_grid_visible_set(el->obj.shot, el->conf.grid_visible);
     }
 
     edje_object_part_swallow(el->obj.main, "elicit.shot", el->obj.shot);
