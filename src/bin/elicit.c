@@ -359,13 +359,15 @@ cb_color_changed(Color *color, void *data)
 }
 
 static void
-cb_shot_selection(void *data, Elicit_Shot_Event_Selection *sel)
+cb_shot_selection(void *data, void *event_info)
 {
   Elicit *el;
+  Elicit_Shot_Event_Selection *sel;
   char buf[1024];
   char *sig;
 
   el = data;
+  sel = event_info;
 
   if (sel)
   {

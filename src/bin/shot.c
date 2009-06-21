@@ -46,6 +46,7 @@ struct Elicit_Shot
   } measure;
 
   Eina_List *select_callbacks;
+  Eina_List *zoom_callbacks;
 
   int zoom;
 
@@ -53,6 +54,13 @@ struct Elicit_Shot
   unsigned char grid_visible : 1;
   unsigned has_data : 1;
 };
+
+
+static void shot_coord_convert(Elicit_Shot *shot, int pointer_x, int pointer_y, int *canvas_x, int *canvas_y, int *shot_x, int *shot_y);
+static void shot_select_start(Elicit_Shot *sh, int px, int py);
+static void shot_select_update(Elicit_Shot *sh, int px, int py);
+static void shot_select_end(Elicit_Shot *sh, int px, int py);
+static void shot_selection_clear(Elicit_Shot *sh);
 
 static void _smart_init(void);
 static void _smart_add(Evas_Object *o);
@@ -77,16 +85,31 @@ void
 elicit_shot_zoom_set(Evas_Object *o, int zoom)
 {
   Elicit_Shot *sh;
+  Elicit_Shot_Event_Zoom_Level *event;
+  Elicit_Shot_Callback *cb;
+  Eina_List *l;
   int iw, ih;
 
   sh = evas_object_smart_data_get(o);
+
+  if (zoom < 1) zoom = 1;
   if (sh->zoom == zoom) return;
+
+  //XXX if zoom is less than before, retake shot to fill in missing data
+  //XXX zoom selection instead of clearing it?
+  shot_selection_clear(sh);
 
   sh->zoom = zoom;
   evas_object_image_size_get(sh->obj, &iw, &ih);
   evas_object_image_fill_set(sh->obj, 0, 0, iw * zoom, ih * zoom);
 
   evas_object_image_fill_set(sh->grid, 0, 0, zoom, zoom);
+
+  event = calloc(1, sizeof(Elicit_Shot_Event_Selection));
+  event->zoom_level = sh->zoom;
+  EINA_LIST_FOREACH(sh->select_callbacks, l, cb)
+    cb->func(cb->data, event);
+  free(event);
 }
 
 void
@@ -222,6 +245,109 @@ shot_coord_convert(Elicit_Shot *shot, int pointer_x, int pointer_y, int *canvas_
 }
 
 static void
+shot_select_start(Elicit_Shot *sh, int px, int py)
+{
+  if (!sh->measure.box)
+  {
+    const char *file;
+    file = elicit_data_file_find("images/grid_select_box.png");
+    if (file)
+    {
+      sh->measure.box = evas_object_image_add(evas_object_evas_get(sh->obj));
+      evas_object_pass_events_set(sh->measure.box, 1);
+      evas_object_image_file_set(sh->measure.box, file, "");
+      evas_object_clip_set(sh->measure.box, sh->clip);
+      evas_object_image_border_set(sh->measure.box, 2, 2, 3, 3);
+      evas_object_smart_member_add(sh->measure.box, sh->smart_obj);
+    }
+  }
+  if (!sh->measure.box) return;
+
+  shot_coord_convert(sh, px, py,
+    &(sh->measure.canvas.start.x), &(sh->measure.canvas.start.y),
+    &(sh->measure.shot.start.x), &(sh->measure.shot.start.y));
+
+  evas_object_move(sh->measure.box, sh->measure.canvas.start.x, sh->measure.canvas.start.y);
+  evas_object_image_fill_set(sh->measure.box, 0, 0, sh->zoom, sh->zoom);
+  evas_object_raise(sh->measure.box);
+  evas_object_resize(sh->measure.box, sh->zoom, sh->zoom);
+  evas_object_hide(sh->measure.box);
+
+  sh->measure.length = 0;
+  sh->measuring = 1;
+}
+
+static void
+shot_select_update(Elicit_Shot *sh, int px, int py)
+{
+  int cx, cy, cw, ch;
+  Eina_List *l;
+  Elicit_Shot_Callback *cb;
+  Elicit_Shot_Event_Selection *event;
+
+  shot_coord_convert(sh, px, py,
+    &(sh->measure.canvas.end.x), &(sh->measure.canvas.end.y),
+    &(sh->measure.shot.end.x), &(sh->measure.shot.end.y));
+
+  cx = sh->measure.canvas.start.x;
+  if (sh->measure.canvas.end.x < cx)
+    cx = sh->measure.canvas.end.x;
+
+  cy = sh->measure.canvas.start.y;
+  if (sh->measure.canvas.end.y < cy)
+    cy = sh->measure.canvas.end.y;
+
+  cw = abs(sh->measure.canvas.end.x - sh->measure.canvas.start.x) + sh->zoom;
+  ch = abs(sh->measure.canvas.end.y - sh->measure.canvas.start.y) + sh->zoom;
+
+  sh->measure.canvas.w = cw;
+  sh->measure.canvas.h = ch;
+  sh->measure.shot.w = cw / sh->zoom;
+  sh->measure.shot.h = ch / sh->zoom;
+
+  if (sh->measure.shot.w == 1)
+    sh->measure.length = sh->measure.shot.h;
+  else if (sh->measure.shot.h == 1)
+    sh->measure.length = sh->measure.shot.w;
+  else
+    sh->measure.length = sqrt(
+      (sh->measure.shot.w * sh->measure.shot.w) +
+      (sh->measure.shot.h * sh->measure.shot.h)
+    );
+
+  evas_object_move(sh->measure.box, cx, cy);
+  evas_object_resize(sh->measure.box, cw, ch);
+  evas_object_image_fill_set(sh->measure.box, 0, 0, cw, ch);
+  evas_object_show(sh->measure.box);
+
+  event = calloc(1, sizeof(Elicit_Shot_Event_Selection));
+  event->w = sh->measure.shot.w;
+  event->h = sh->measure.shot.h;
+  event->length = sh->measure.length;
+  EINA_LIST_FOREACH(sh->select_callbacks, l, cb)
+    cb->func(cb->data, event);
+  free(event);
+}
+
+static void
+shot_select_end(Elicit_Shot *sh, int px, int py)
+{
+  sh->measuring = 0;
+  if (sh->measure.length == 0)
+    shot_selection_clear(sh);
+}
+
+static void
+shot_selection_clear(Elicit_Shot *sh)
+{
+  Elicit_Shot_Callback *cb;
+  Eina_List *l;
+  evas_object_hide(sh->measure.box);
+  EINA_LIST_FOREACH(sh->select_callbacks, l, cb)
+    cb->func(cb->data, NULL);
+}
+
+static void
 cb_evas_mouse_down(void *data, Evas *e, Evas_Object *obj, void *event_info)
 {
   Evas_Event_Mouse_Down *ev;
@@ -231,37 +357,7 @@ cb_evas_mouse_down(void *data, Evas *e, Evas_Object *obj, void *event_info)
   ev = event_info;
 
   if (ev->button == 3)
-  {
-    if (!sh->measure.box)
-    {
-      const char *file;
-      file = elicit_data_file_find("images/grid_select_box.png");
-      if (file)
-      {
-        sh->measure.box = evas_object_image_add(evas_object_evas_get(sh->obj));
-        evas_object_pass_events_set(sh->measure.box, 1);
-        evas_object_image_file_set(sh->measure.box, file, "");
-        evas_object_clip_set(sh->measure.box, sh->clip);
-        evas_object_image_border_set(sh->measure.box, 2, 2, 3, 3);
-        evas_object_smart_member_add(sh->measure.box, sh->smart_obj);
-      }
-    }
-    if (sh->measure.box)
-    {
-      shot_coord_convert(sh, ev->canvas.x, ev->canvas.y,
-        &(sh->measure.canvas.start.x), &(sh->measure.canvas.start.y),
-        &(sh->measure.shot.start.x), &(sh->measure.shot.start.y));
-
-      evas_object_move(sh->measure.box, sh->measure.canvas.start.x, sh->measure.canvas.start.y);
-      evas_object_image_fill_set(sh->measure.box, 0, 0, sh->zoom, sh->zoom);
-      evas_object_raise(sh->measure.box);
-      evas_object_resize(sh->measure.box, sh->zoom, sh->zoom);
-      evas_object_hide(sh->measure.box);
-
-      sh->measure.length = 0;
-      sh->measuring = 1;
-    }
-  }
+    shot_select_start(sh, ev->canvas.x, ev->canvas.y);
 }
 
 static void
@@ -274,55 +370,7 @@ cb_evas_mouse_move(void *data, Evas *e, Evas_Object *obj, void *event_info)
   ev = event_info;
 
   if (sh->measuring)
-  {
-    int cx, cy, cw, ch;
-    Eina_List *l;
-    Elicit_Shot_Callback *cb;
-    Elicit_Shot_Event_Selection *event;
-
-    shot_coord_convert(sh, ev->cur.canvas.x, ev->cur.canvas.y,
-      &(sh->measure.canvas.end.x), &(sh->measure.canvas.end.y),
-      &(sh->measure.shot.end.x), &(sh->measure.shot.end.y));
-
-    cx = sh->measure.canvas.start.x;
-    if (sh->measure.canvas.end.x < cx)
-      cx = sh->measure.canvas.end.x;
-
-    cy = sh->measure.canvas.start.y;
-    if (sh->measure.canvas.end.y < cy)
-      cy = sh->measure.canvas.end.y;
-
-    cw = abs(sh->measure.canvas.end.x - sh->measure.canvas.start.x) + sh->zoom;
-    ch = abs(sh->measure.canvas.end.y - sh->measure.canvas.start.y) + sh->zoom;
-
-    sh->measure.canvas.w = cw;
-    sh->measure.canvas.h = ch;
-    sh->measure.shot.w = cw / sh->zoom;
-    sh->measure.shot.h = ch / sh->zoom;
-
-    if (sh->measure.shot.w == 1)
-      sh->measure.length = sh->measure.shot.h;
-    else if (sh->measure.shot.h == 1)
-      sh->measure.length = sh->measure.shot.w;
-    else
-      sh->measure.length = sqrt(
-        (sh->measure.shot.w * sh->measure.shot.w) +
-        (sh->measure.shot.h * sh->measure.shot.h)
-      );
-
-    evas_object_move(sh->measure.box, cx, cy);
-    evas_object_resize(sh->measure.box, cw, ch);
-    evas_object_image_fill_set(sh->measure.box, 0, 0, cw, ch);
-    evas_object_show(sh->measure.box);
-
-    event = calloc(1, sizeof(Elicit_Shot_Event_Selection));
-    event->w = sh->measure.shot.w;
-    event->h = sh->measure.shot.h;
-    event->length = sh->measure.length;
-    EINA_LIST_FOREACH(sh->select_callbacks, l, cb)
-      cb->func(cb->data, event);
-    free(event);
-  }
+    shot_select_update(sh, ev->cur.canvas.x, ev->cur.canvas.y);
 }
 
 static void
@@ -335,16 +383,42 @@ cb_evas_mouse_up(void *data, Evas *e, Evas_Object *obj, void *event_info)
   ev = event_info;
 
   if (ev->button == 3)
+    shot_select_end(sh, ev->canvas.x, ev->canvas.y);
+}
+
+static void
+cb_evas_mouse_wheel(void *data, Evas *e, Evas_Object *obj, void *event_info)
+{
+  Evas_Event_Mouse_Wheel *ev;
+  Elicit_Shot *sh;
+
+  sh = data;
+  ev = event_info;
+
+  elicit_shot_zoom_set(sh->smart_obj, sh->zoom - ev->z);
+}
+
+static void
+elicit_shot_callback_add(Eina_List **cb_list, Elicit_Shot_Callback_Func func, void *data)
+{
+  Elicit_Shot_Callback *cb;
+  cb = calloc(1, sizeof(Elicit_Shot_Callback));
+  cb->func = func;
+  cb->data = data;
+
+  *cb_list = eina_list_append(*cb_list, cb);
+}
+
+void
+elicit_shot_callback_del(Eina_List **cb_list, Elicit_Shot_Callback_Func func)
+{
+  Eina_List *l, *l_next;
+  Elicit_Shot_Callback *cb;
+
+  EINA_LIST_FOREACH_SAFE(*cb_list, l, l_next, cb)
   {
-    sh->measuring = 0;
-    if (sh->measure.length == 0)
-    {
-      Elicit_Shot_Callback *cb;
-      Eina_List *l;
-      evas_object_hide(sh->measure.box);
-      EINA_LIST_FOREACH(sh->select_callbacks, l, cb)
-        cb->func(cb->data, NULL);
-    }
+    if (cb->func == func)
+      *cb_list = eina_list_remove_list(*cb_list, l);
   }
 }
 
@@ -352,31 +426,32 @@ void
 elicit_shot_callback_select_add(Evas_Object *obj, Elicit_Shot_Callback_Func func, void *data)
 {
   Elicit_Shot *sh;
-  Elicit_Shot_Callback *cb;
-
   sh = evas_object_smart_data_get(obj);
-
-  cb = calloc(1, sizeof(Elicit_Shot_Callback));
-  cb->func = func;
-  cb->data = data;
-
-  sh->select_callbacks = eina_list_append(sh->select_callbacks, cb);
+  elicit_shot_callback_add(&(sh->select_callbacks), func, data);
 }
 
 void
 elicit_shot_callback_select_del(Evas_Object *obj, Elicit_Shot_Callback_Func func)
 {
   Elicit_Shot *sh;
-  Eina_List *l, *l_next;
-  Elicit_Shot_Callback *cb;
-
   sh = evas_object_smart_data_get(obj);
+  elicit_shot_callback_del(&(sh->select_callbacks), func);
+}
 
-  EINA_LIST_FOREACH_SAFE(sh->select_callbacks, l, l_next, cb)
-  {
-    if (cb->func == func)
-      sh->select_callbacks = eina_list_remove_list(sh->select_callbacks, l);
-  }
+void
+elicit_shot_callback_zoom_add(Evas_Object *obj, Elicit_Shot_Callback_Func func, void *data)
+{
+  Elicit_Shot *sh;
+  sh = evas_object_smart_data_get(obj);
+  elicit_shot_callback_add(&(sh->zoom_callbacks), func, data);
+}
+
+void
+elicit_shot_callback_zoom_del(Evas_Object *obj, Elicit_Shot_Callback_Func func)
+{
+  Elicit_Shot *sh;
+  sh = evas_object_smart_data_get(obj);
+  elicit_shot_callback_del(&(sh->zoom_callbacks), func);
 }
 
 static void
@@ -448,6 +523,7 @@ _smart_add(Evas_Object *o)
   evas_object_event_callback_add(sh->event, EVAS_CALLBACK_MOUSE_DOWN, cb_evas_mouse_down, sh);
   evas_object_event_callback_add(sh->event, EVAS_CALLBACK_MOUSE_MOVE, cb_evas_mouse_move, sh);
   evas_object_event_callback_add(sh->event, EVAS_CALLBACK_MOUSE_UP, cb_evas_mouse_up, sh);
+  evas_object_event_callback_add(sh->event, EVAS_CALLBACK_MOUSE_WHEEL, cb_evas_mouse_wheel, sh);
 
   elicit_shot_zoom_set(o, 4);
 }
