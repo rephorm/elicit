@@ -1,4 +1,4 @@
-IMAGES = grid_cell.png
+IMAGES = grid_cell.png grid_select_box.png
 
 imagesdir = $(pkgdatadir)/images
 images_DATA = $(IMAGES)

@@ -358,6 +358,31 @@ cb_color_changed(Color *color, void *data)
   edje_object_part_text_set(el->obj.main, "elicit.color.hex", color_hex_get(el->color, COLOR_HEX_HASH | COLOR_HEX_CAPS));
 }
 
+static void
+cb_shot_selection(void *data, Elicit_Shot_Event_Selection *sel)
+{
+  Elicit *el;
+  char buf[1024];
+  char *sig;
+
+  el = data;
+
+  if (sel)
+  {
+    snprintf(buf, sizeof(buf), "%d x %d (%.1f)",
+             sel->w, sel->h, sel->length);
+    sig = "elicit,shot,selection,show";
+  }
+  else
+  {
+    buf[0] = '\0';
+    sig = "elicit,shot,selection,hide";
+  }
+
+  edje_object_part_text_set(el->obj.main, "elicit.shot.selection.text", buf);
+  edje_object_signal_emit(el->obj.main, sig, "elicit");
+}
+
 Elicit *
 elicit_new()
 {
@@ -498,6 +523,7 @@ elicit_theme_swallow_objs(Elicit *el)
     if (!el->obj.shot)
     {
       el->obj.shot = elicit_shot_add(el->evas);
+      elicit_shot_callback_select_add(el->obj.shot, cb_shot_selection, el);
       elicit_shot_zoom_set(el->obj.shot, el->conf.zoom_level);
       elicit_shot_grid_visible_set(el->obj.shot, el->conf.grid_visible);
     }

@@ -200,4 +200,5 @@ TAB(3, "misc", "tab-theme.png", 8, 8, "Miscellaneous");
 
 #include "main.tab.data.edc"
 #include "main.tab.palette.edc"
+#include "main.tab.shots.edc"
 #include "main.tab.misc.edc"

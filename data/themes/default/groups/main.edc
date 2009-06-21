@@ -126,6 +126,47 @@ group {
       }
     }
     part {
+      name: "elicit.shot.selection.bg";
+      type: RECT;
+      mouse_events: 0;
+      description {
+        state: "default" 0.0;
+        color: 255 255 255 0;
+        rel1 { to: "elicit.shot.selection.text"; offset: -2 -2; }
+        rel2 { to: "elicit.shot.selection.text"; offset: 1 1; }
+      }
+      description {
+        state: "visible" 0.0;
+        inherit: "default" 0.0;
+        color: 255 255 255 200;
+      }
+    }
+    part {
+      name: "elicit.shot.selection.text";
+      type: TEXT;
+      mouse_events: 0;
+      description {
+        state: "default" 0.0;
+        color: 0 0 0 0;
+        rel1 { to: "elicit.shot"; relative: 1 0; offset: -6 5; }
+        rel2 { to: "elicit.shot"; relative: 1 0; offset: -6 13; }
+        align: 1 0;
+        text {
+          font: "Vera";
+          size: 10;
+          text: "3 x 4 :: 5";
+          align: 1.0 0.0;
+          fit: 1 1;
+          min: 1 1;
+        }
+      }
+      description {
+        state: "visible" 0.0;
+        inherit: "default" 0.0;
+        color: 0 0 0 255;
+      }
+    }
+    part {
       name: "elicit.shot.event";
       type: RECT;
       description {
@@ -410,6 +451,24 @@ group {
       target: "base.gradient.bottom";
       target: "panel.border.gradient";
       transition: DECELERATE 0.5;
+    }
+
+    program {
+      name: "elicit.shot.selection.show";
+      signal: "elicit,shot,selection,show";
+      source: "*";
+      action: STATE_SET "visible" 0.0;
+      target: "elicit.shot.selection.text";
+      target: "elicit.shot.selection.bg";
+    }
+
+    program {
+      name: "elicit.shot.selection.hide";
+      signal: "elicit,shot,selection,hide";
+      source: "*";
+      action: STATE_SET "default" 0.0;
+      target: "elicit.shot.selection.text";
+      target: "elicit.shot.selection.bg";
     }
 
   }
