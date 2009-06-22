@@ -4,7 +4,7 @@
 #include "band.h"
 
 Elicit_Band *
-elicit_band_new()
+elicit_band_new(const char *theme_file)
 {
   Elicit_Band *band;
 
@@ -18,7 +18,7 @@ elicit_band_new()
   band->obj = edje_object_add(ecore_evas_get(band->ee));
 
   //XXX theme file!
-  if (!edje_object_file_set(band->obj, "/home/rephorm/code/elicit2/data/themes/default/default.edj", "elicit.band"))
+  if (!edje_object_file_set(band->obj, theme_file, "elicit.band"))
   {
     fprintf(stderr, "[Elicit] Error: Can't set band theme\n");
   }

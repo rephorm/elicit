@@ -12,7 +12,7 @@ struct Elicit_Band
 
 typedef struct Elicit_Band Elicit_Band;
 
-Elicit_Band * elicit_band_new();
+Elicit_Band *elicit_band_new(const char *theme_file);
 void elicit_band_free(Elicit_Band *band);
 void elicit_band_show(Elicit_Band *band);
 void elicit_band_hide(Elicit_Band *band);

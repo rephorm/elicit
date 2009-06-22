@@ -103,7 +103,7 @@ cb_edje_signal(void *data, Evas_Object *obj, const char *emission, const char *s
     if (tok && !strcmp(tok, "start"))
     {
       if (!el->band)
-        el->band = elicit_band_new();
+        el->band = elicit_band_new(el->path.theme);
 
       if (el->conf.show_band)
         elicit_band_show(el->band);
