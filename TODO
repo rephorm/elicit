@@ -2,8 +2,6 @@
 FEATURES
 --------
 
-Add distance measuring in zoom area (rect + diag?)
-
 Ability to save magnified shots
 
 Palette
@@ -12,8 +10,6 @@ Palette
   multiple palettes
 
 Configuration
-  grid on/off
-  band on/off
   zoom level
 
 Load related colors
