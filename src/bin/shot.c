@@ -226,8 +226,8 @@ shot_coord_convert(Elicit_Shot *shot, int pointer_x, int pointer_y, int *canvas_
   evas_object_geometry_get(shot->obj, &sx, &sy, NULL, NULL);
   shx = (pointer_x - sx) / shot->zoom;
   shy = (pointer_y - sy) / shot->zoom;
-  cx = shx * shot->zoom + sx;
-  cy = shy * shot->zoom + sy;
+  cx = shx * shot->zoom + sx - 1;
+  cy = shy * shot->zoom + sy - 1;
 
   if (shot_x) *shot_x = shx;
   if (shot_y) *shot_y = shy;
@@ -261,7 +261,7 @@ shot_select_start(Elicit_Shot *sh, int px, int py)
   evas_object_move(sh->measure.box, sh->measure.canvas.start.x, sh->measure.canvas.start.y);
   evas_object_image_fill_set(sh->measure.box, 0, 0, sh->zoom, sh->zoom);
   evas_object_raise(sh->measure.box);
-  evas_object_resize(sh->measure.box, sh->zoom, sh->zoom);
+  evas_object_resize(sh->measure.box, sh->zoom + 1, sh->zoom + 1);
   evas_object_hide(sh->measure.box);
 
   sh->measure.length = 0;
@@ -288,8 +288,8 @@ shot_select_update(Elicit_Shot *sh, int px, int py)
   if (sh->measure.canvas.end.y < cy)
     cy = sh->measure.canvas.end.y;
 
-  cw = abs(sh->measure.canvas.end.x - sh->measure.canvas.start.x) + sh->zoom;
-  ch = abs(sh->measure.canvas.end.y - sh->measure.canvas.start.y) + sh->zoom;
+  cw = abs(sh->measure.canvas.end.x - sh->measure.canvas.start.x) + sh->zoom + 1;
+  ch = abs(sh->measure.canvas.end.y - sh->measure.canvas.start.y) + sh->zoom + 1;
 
   sh->measure.canvas.w = cw;
   sh->measure.canvas.h = ch;
