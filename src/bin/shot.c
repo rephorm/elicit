@@ -85,6 +85,9 @@ void
 elicit_shot_zoom_set(Evas_Object *o, int zoom)
 {
   Elicit_Shot *sh;
+  Elicit_Shot_Event_Zoom_Level *event;
+  Elicit_Shot_Callback *cb;
+  Eina_List *l;
   int iw, ih;
 
   sh = evas_object_smart_data_get(o);
@@ -101,6 +104,12 @@ elicit_shot_zoom_set(Evas_Object *o, int zoom)
   evas_object_image_fill_set(sh->obj, 0, 0, iw * zoom, ih * zoom);
 
   evas_object_image_fill_set(sh->grid, 0, 0, zoom, zoom);
+
+  event = calloc(1, sizeof(Elicit_Shot_Event_Selection));
+  event->zoom_level = sh->zoom;
+  EINA_LIST_FOREACH(sh->select_callbacks, l, cb)
+    cb->func(cb->data, event);
+  free(event);
 }
 
 void
