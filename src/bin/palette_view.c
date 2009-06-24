@@ -10,6 +10,8 @@ Evas_Smart_Class pv_class;
 static void pv_init();
 static void pv_add(Evas_Object *obj);
 static void pv_del(Evas_Object *obj);
+static void pv_show(Evas_Object *obj);
+static void pv_hide(Evas_Object *obj);
 static void pv_move(Evas_Object *obj, Evas_Coord x, Evas_Coord y);
 static void pv_resize(Evas_Object *obj, Evas_Coord w, Evas_Coord h);
 static void pv_clip_set(Evas_Object *obj, Evas_Object *clip);
@@ -102,6 +104,8 @@ pv_init()
   pv_class.version = EVAS_SMART_CLASS_VERSION;
   pv_class.add = pv_add;
   pv_class.del = pv_del;
+  pv_class.show = pv_show;
+  pv_class.hide = pv_hide;
   pv_class.move = pv_move;
   pv_class.resize = pv_resize;
   pv_class.clip_set = pv_clip_set;
@@ -150,6 +154,34 @@ pv_del(Evas_Object *obj)
   if (pv->theme.group) free(pv->theme.group);
 
   free(pv);
+}
+
+static void
+pv_show(Evas_Object *obj)
+{
+  Eina_List *l;
+  Evas_Object *rect;
+  API_ENTRY;
+
+  EINA_LIST_FOREACH(pv->rects, l, rect) {
+    evas_object_show(rect);
+  }
+  if (pv->selected)
+    evas_object_show(pv->selector);
+}
+
+static void
+pv_hide(Evas_Object *obj)
+{
+  Eina_List *l;
+  Evas_Object *rect;
+  API_ENTRY;
+
+  EINA_LIST_FOREACH(pv->rects, l, rect) {
+    evas_object_hide(rect);
+  }
+  if (pv->selected)
+    evas_object_hide(pv->selector);
 }
 
 static void
