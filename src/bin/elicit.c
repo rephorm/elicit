@@ -164,6 +164,20 @@ cb_edje_signal(void *data, Evas_Object *obj, const char *emission, const char *s
         palette_view_select(el->obj.palette, NULL);
       }
     }
+    else if (tok && !strcmp(tok, "columns"))
+    {
+      int col;
+      tok = strtok(NULL, ",");
+
+      col = palette_columns_get(el->palette);
+      if (tok && !strcmp(tok, "up"))
+        col += 1;
+      else if (tok && !strcmp(tok, "down"))
+        col -= 1;
+
+      palette_columns_set(el->palette, col);
+      palette_view_changed(el->obj.palette);
+    }
     else
       invalid = 1;
   }
