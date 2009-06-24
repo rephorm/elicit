@@ -385,6 +385,19 @@ cb_shot_selection(void *data, void *event_info)
   edje_object_signal_emit(el->obj.main, sig, "elicit");
 }
 
+static void
+cb_shot_zoom(void *data, void *event_info)
+{
+  Elicit *el;
+  Elicit_Shot_Event_Zoom_Level *ev;
+
+  el = data;
+  ev = event_info;
+
+  el->conf.zoom_level = ev->zoom_level;
+  el->conf.changed = 1;
+}
+
 Elicit *
 elicit_new()
 {
@@ -526,6 +539,7 @@ elicit_theme_swallow_objs(Elicit *el)
     {
       el->obj.shot = elicit_shot_add(el->evas);
       elicit_shot_callback_select_add(el->obj.shot, cb_shot_selection, el);
+      elicit_shot_callback_zoom_add(el->obj.shot, cb_shot_zoom, el);
       elicit_shot_zoom_set(el->obj.shot, el->conf.zoom_level);
       elicit_shot_grid_visible_set(el->obj.shot, el->conf.grid_visible);
     }

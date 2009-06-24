@@ -105,9 +105,9 @@ elicit_shot_zoom_set(Evas_Object *o, int zoom)
 
   evas_object_image_fill_set(sh->grid, 0, 0, zoom, zoom);
 
-  event = calloc(1, sizeof(Elicit_Shot_Event_Selection));
+  event = calloc(1, sizeof(Elicit_Shot_Event_Zoom_Level));
   event->zoom_level = sh->zoom;
-  EINA_LIST_FOREACH(sh->select_callbacks, l, cb)
+  EINA_LIST_FOREACH(sh->zoom_callbacks, l, cb)
     cb->func(cb->data, event);
   free(event);
 }
