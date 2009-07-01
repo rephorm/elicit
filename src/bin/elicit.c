@@ -427,7 +427,12 @@ elicit_new()
   ecore_evas_title_set(el->ee, "Elicit");
   ecore_evas_name_class_set(el->ee, "Elicit", "Elicit");
   ecore_evas_borderless_set(el->ee, 1);
-  ecore_evas_shaped_set(el->ee, 1);
+
+  // XXX get correct screen number
+  if (ecore_x_screen_is_composited(0))
+    ecore_evas_alpha_set(el->ee, 1);
+  else
+    ecore_evas_shaped_set(el->ee, 1);
 
   ecore_evas_data_set(el->ee, "Elicit", el);
   ecore_evas_callback_resize_set(el->ee, cb_ee_resize);
