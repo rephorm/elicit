@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <Edje.h>
+#include <Ecore_X.h>
 #include <Ecore_Evas.h>
 #include "band.h"
 
@@ -10,10 +11,13 @@ elicit_band_new(const char *theme_file)
 
   band = calloc(1, sizeof(Elicit_Band));
 
-  //XXX allow other engines and alpha (instead of shaped)
+  //XXX allow other engines
   band->ee = ecore_evas_software_x11_new(0,0,0,0,10,10);
-  ecore_evas_override_set(band->ee, 1);
-  ecore_evas_shaped_set(band->ee, 1);
+  ecore_evas_borderless_set(band->ee, 1);
+  if (ecore_x_screen_is_composited(0))
+    ecore_evas_alpha_set(band->ee, 1);
+  else
+    ecore_evas_shaped_set(band->ee, 1);
 
   band->obj = edje_object_add(ecore_evas_get(band->ee));
 
