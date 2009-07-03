@@ -141,6 +141,7 @@ cb_edje_signal(void *data, Evas_Object *obj, const char *emission, const char *s
       invalid = 1;
   }
 
+  /* palette */
   else if (!strcmp(tok, "palette"))
   {
     tok = strtok(NULL, ",");
@@ -182,6 +183,7 @@ cb_edje_signal(void *data, Evas_Object *obj, const char *emission, const char *s
       invalid = 1;
   }
 
+  /* band config */
   else if (!strcmp(tok, "band"))
   {
     tok = strtok(NULL, ",");
@@ -199,6 +201,7 @@ cb_edje_signal(void *data, Evas_Object *obj, const char *emission, const char *s
     }
   }
 
+  /* grid config */
   else if (!strcmp(tok, "grid"))
   {
     tok = strtok(NULL, ",");
@@ -216,11 +219,34 @@ cb_edje_signal(void *data, Evas_Object *obj, const char *emission, const char *s
     }
   }
 
+  /* color classes */
   else if (!strcmp(tok, "colorclass"))
   {
     int r,g,b,a;
     color_rgba_get(el->color, &r, &g, &b, &a);
     edje_object_color_class_set(el->obj.main, source, r, g, b, a, r, g, b, a, r, g, b, a);
+  }
+
+  else if (!strcmp(tok, "hex"))
+  {
+    tok = strtok(NULL, ",");
+    if (tok && !strcmp(tok, "copy"))
+    {
+      Ecore_X_Window win;
+      const char *hex;
+      int len;
+
+      win = ecore_evas_software_x11_window_get(el->ee);
+      hex = color_hex_get(el->color, COLOR_HEX_HASH | COLOR_HEX_CAPS);
+      if (hex)
+      {
+        len = strlen(hex);
+        ecore_x_selection_primary_set(win, hex, len);
+        ecore_x_selection_clipboard_set(win, hex, len);
+      }
+    }
+    else
+      invalid = 1;
   }
 
   /* quit */

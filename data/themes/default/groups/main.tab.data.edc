@@ -40,6 +40,11 @@ part {
       align: 0.5 0.5;
     }
   }
+  description {
+    state: "flash" 0.0;
+    inherit: "default" 0.0;
+    color: 255 255 255 255;
+  }
 }
 
 part {
@@ -141,5 +146,25 @@ part {
       border: 7 8 7 8;
     }
   }
+}
+
+program {
+  name: "hex.copy";
+  signal: "mouse,clicked,1";
+  source: "elicit.color.hex";
+  action: SIGNAL_EMIT "elicit,hex,copy" "";
+  after: "hex.flash";
+}
+program {
+  name: "hex.flash";
+  action: STATE_SET "flash" 0.0;
+  target: "elicit.color.hex";
+  after: "hex.flash.2";
+}
+program {
+  name: "hex.flash.2";
+  action: STATE_SET "default" 0.0;
+  target: "elicit.color.hex";
+  transition: DECELERATE 0.25;
 }
 
