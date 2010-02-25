@@ -419,6 +419,7 @@ elicit_shot_callback_del(Eina_List **cb_list, Elicit_Shot_Callback_Func func)
   {
     if (cb->func == func)
       *cb_list = eina_list_remove_list(*cb_list, l);
+    free(cb);
   }
 }
 
@@ -542,6 +543,11 @@ _smart_del(Evas_Object *o)
   if (sh->measure.box) evas_object_del(sh->measure.box);
 
   EINA_LIST_FREE(sh->select_callbacks, cb)
+  {
+    free(cb);
+  }
+
+  EINA_LIST_FREE(sh->zoom_callbacks, cb)
   {
     free(cb);
   }
