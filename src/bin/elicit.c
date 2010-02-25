@@ -448,6 +448,12 @@ elicit_new()
   el = calloc(sizeof(Elicit), 1);
 
   el->ee = ecore_evas_software_x11_new(NULL, 0, 0, 0, 500, 500);
+  if (!el->ee)
+  {
+    fprintf(stderr, "[Elicit] Error creating new ecore evas\n");
+    free(el);
+    return NULL;
+  }
   el->evas = ecore_evas_get(el->ee);
 
   ecore_evas_title_set(el->ee, "Elicit");
@@ -815,9 +821,11 @@ elicit_libs_init(void)
     eina_shutdown();
     return 0;
   }
-  if (!ecore_evas_init())
+  if (!ecore_evas_init() ||
+      !ecore_evas_engine_type_supported_get(ECORE_EVAS_ENGINE_SOFTWARE_XLIB))
   {
     fprintf(stderr, "[Elicit] Failed to initialize ecore_evas.\n");
+    fprintf(stderr, "[Elicit] Make sure you have the evas software X11 engine installed.\n");
     eina_shutdown();
     ecore_shutdown();
     return 0;
