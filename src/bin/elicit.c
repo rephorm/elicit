@@ -102,17 +102,12 @@ cb_edje_signal(void *data, Evas_Object *obj, const char *emission, const char *s
     tok = strtok(NULL, ",");
     if (tok && !strcmp(tok, "start"))
     {
-      if (!el->band)
-        el->band = elicit_band_new(el->path.theme);
-
-      if (el->conf.show_band)
-        elicit_band_show(el->band);
       el->state.magnifying = 1;
     }
     else if (tok && !strcmp(tok, "stop"))
     {
-      elicit_band_hide(el->band);
       el->state.magnifying = 0;
+      elicit_magnify_stop(el);
     }
     else
       invalid = 1;
@@ -308,6 +303,21 @@ cb_palette_color_deleted(void *data, Evas_Object *obj, void *event_info)
   palette_save(p);
 }
 
+int
+elicit_magnify_timer(void *data)
+{
+  Elicit *el = data;
+  elicit_shot_grab(el->obj.shot,
+    el->magnify.x,
+    el->magnify.y,
+    el->magnify.w,
+    el->magnify.h,
+    0);
+  el->magnify.timer = NULL;
+
+  return 0;
+}
+
 void
 elicit_magnify(Elicit *el)
 {
@@ -315,6 +325,14 @@ elicit_magnify(Elicit *el)
   int px, py;
   int dw, dh;
   int w, h;
+
+  if (el->conf.show_band)
+  {
+    if (!el->band)
+      el->band = elicit_band_new(el->path.theme);
+
+    elicit_band_show(el->band);
+  }
 
   ecore_x_pointer_last_xy_get(&px, &py);
   elicit_shot_size_get(el->obj.shot, &w, &h);
@@ -331,7 +349,26 @@ elicit_magnify(Elicit *el)
 
   if (el->conf.show_band)
     elicit_band_move_resize(el->band, x-1, y-1, w+2, h+2);
-  elicit_shot_grab(el->obj.shot, x, y, w, h, 0);
+
+  el->magnify.x = x;
+  el->magnify.y = y;
+  el->magnify.w = w;
+  el->magnify.h = h;
+
+  if (!el->magnify.timer)
+    el->magnify.timer = ecore_timer_add(1.0/el->conf.grab_rate, elicit_magnify_timer, el);
+}
+
+void
+elicit_magnify_stop(Elicit *el)
+{
+  if (el->magnify.timer)
+  {
+    ecore_timer_del(el->magnify.timer);
+    el->magnify.timer = NULL;
+  }
+  if (el->conf.show_band)
+    elicit_band_hide(el->band);
 }
 
 void
@@ -513,6 +550,8 @@ elicit_new()
 void
 elicit_free(Elicit *el)
 {
+  elicit_magnify_stop(el);
+
   if (el->color)
     color_unref(el->color);
 

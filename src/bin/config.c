@@ -15,6 +15,7 @@ elicit_config_load(Elicit *el)
   el->conf.w = 200;
   el->conf.h = 200;
   el->conf.zoom_level = 4;
+  el->conf.grab_rate = 60;
   el->conf.grid_visible = 1;
   el->conf.show_band = 1;
 
@@ -76,9 +77,15 @@ elicit_config_load(Elicit *el)
     }
     else if (!strcmp(key, "zoom_level"))
     {
-      el->conf.zoom_level = atoi(val);
-      if (!el->conf.zoom_level)
-        el->conf.zoom_level = 4;
+      int zoom_level = atoi(val);
+      if (zoom_level >= 1)
+        el->conf.zoom_level = zoom_level;
+    }
+    else if (!strcmp(key, "grab_rate"))
+    {
+      int grab_rate = atoi(val);
+      if (grab_rate > 0)
+        el->conf.grab_rate = grab_rate;
     }
     else if (!strcmp(key, "grid_visible"))
     {
@@ -110,6 +117,7 @@ elicit_config_save(Elicit *el)
   fprintf(f, "geometry: %dx%d%+d%+d\n", el->conf.w, el->conf.h, el->conf.x, el->conf.y);
   fprintf(f, "color: %s\n", color_hex_get(el->color, COLOR_HEX_HASH | COLOR_HEX_CAPS));
   fprintf(f, "zoom_level: %d\n", el->conf.zoom_level);
+  fprintf(f, "grab_rate: %d\n", el->conf.grab_rate);
   fprintf(f, "grid_visible: %d\n", el->conf.grid_visible ? 1 :0);
   fprintf(f, "show_band: %d\n", el->conf.show_band ? 1 : 0);
   fclose(f);
