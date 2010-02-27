@@ -1,6 +1,8 @@
 #include <X11/Xlib.h>
 #include <Ecore.h>
 #include <Ecore_X.h>
+#include <Ecore_X_Cursor.h>
+#include <Ecore_Evas.h>
 #include <Ecore_File.h>
 #include "elicit.h"
 #include "config.h"
@@ -103,6 +105,10 @@ cb_edje_signal(void *data, Evas_Object *obj, const char *emission, const char *s
     if (tok && !strcmp(tok, "start"))
     {
       el->state.magnifying = 1;
+      ecore_x_window_cursor_set(
+        ecore_evas_software_x11_window_get(el->ee),
+        ecore_x_cursor_shape_get(ECORE_X_CURSOR_CROSS)
+      );
     }
     else if (tok && !strcmp(tok, "stop"))
     {
@@ -263,7 +269,6 @@ cb_edje_move(void *data, Evas_Object *obj, const char *emission, const char *sou
 {
   Elicit *el = data;
 
-
   if (el->state.magnifying)
     elicit_magnify(el);
 
@@ -369,6 +374,11 @@ elicit_magnify_stop(Elicit *el)
   }
   if (el->conf.show_band && el->band)
     elicit_band_hide(el->band);
+
+  ecore_x_window_cursor_set(
+    ecore_evas_software_x11_window_get(el->ee),
+    ecore_x_cursor_shape_get(ECORE_X_CURSOR_ARROW)
+  );
 }
 
 void
