@@ -105,10 +105,7 @@ cb_edje_signal(void *data, Evas_Object *obj, const char *emission, const char *s
     if (tok && !strcmp(tok, "start"))
     {
       el->state.magnifying = 1;
-      ecore_x_window_cursor_set(
-        ecore_evas_software_x11_window_get(el->ee),
-        ecore_x_cursor_shape_get(ECORE_X_CURSOR_CROSS)
-      );
+      elicit_cursor_set_cross(el);
     }
     else if (tok && !strcmp(tok, "stop"))
     {
@@ -124,9 +121,15 @@ cb_edje_signal(void *data, Evas_Object *obj, const char *emission, const char *s
   {
     tok = strtok(NULL, ",");
     if (tok && !strcmp(tok, "start"))
+    {
       el->state.picking = 1;
+      elicit_cursor_set_cross(el);
+    }
     else if (tok && !strcmp(tok, "stop"))
+    {
       el->state.picking = 0;
+      elicit_cursor_set_default(el);
+    }
     else
       invalid = 1;
   }
@@ -308,6 +311,41 @@ cb_palette_color_deleted(void *data, Evas_Object *obj, void *event_info)
   palette_save(p);
 }
 
+void
+elicit_cursor_set_cross(Elicit *el)
+{
+  Ecore_X_Cursor cur;
+  int cross[49] = {
+     0,  0,  0, -1,  0,  0,  0,
+     0,  0,  0, -1,  0,  0,  0,
+     0,  0,  0, -1,  0,  0,  0,
+    -1, -1, -1, -1, -1, -1, -1,
+     0,  0,  0, -1,  0,  0,  0,
+     0,  0,  0, -1,  0,  0,  0,
+     0,  0,  0, -1,  0,  0,  0
+  };
+
+  cur = ecore_x_cursor_new(
+    ecore_evas_software_x11_window_get(el->ee),
+    cross,
+    7, 7, 3, 3
+  );
+  ecore_x_window_cursor_set(
+    ecore_evas_software_x11_window_get(el->ee),
+    cur
+  );
+  ecore_x_cursor_free(cur);
+}
+
+void
+elicit_cursor_set_default(Elicit *el)
+{
+  ecore_x_window_cursor_set(
+    ecore_evas_software_x11_window_get(el->ee),
+    ecore_x_cursor_shape_get(ECORE_X_CURSOR_ARROW)
+  );
+}
+
 int
 elicit_magnify_timer(void *data)
 {
@@ -375,10 +413,7 @@ elicit_magnify_stop(Elicit *el)
   if (el->conf.show_band && el->band)
     elicit_band_hide(el->band);
 
-  ecore_x_window_cursor_set(
-    ecore_evas_software_x11_window_get(el->ee),
-    ecore_x_cursor_shape_get(ECORE_X_CURSOR_ARROW)
-  );
+  elicit_cursor_set_default(el);
 }
 
 void

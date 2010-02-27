@@ -85,6 +85,8 @@ int elicit_theme_set(Elicit *el, const char *theme);
 int  elicit_libs_init(void);
 void elicit_libs_shutdown();
 
+void elicit_cursor_set_cross(Elicit *el);
+void elicit_cursor_set_default(Elicit *el);
 void elicit_magnify(Elicit *el);
 void elicit_magnify_stop(Elicit *el);
 void elicit_pick(Elicit *el);
