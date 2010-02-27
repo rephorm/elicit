@@ -56,6 +56,7 @@ struct Elicit {
 
     char *theme;
 
+    int palette_columns; // default
     int zoom_level;
     int grab_rate; // in grabs per second
     unsigned char grid_visible : 1;

@@ -56,6 +56,23 @@ palette_view_palette_get(Evas_Object *obj)
 }
 
 void
+palette_view_default_columns_set(Evas_Object *obj, int columns)
+{
+  API_ENTRY;
+
+  if (columns > 0)
+    pv->default_columns = columns;
+}
+
+int
+palette_view_default_columns_get(Evas_Object *obj)
+{
+  API_ENTRY 0;
+
+  return pv->default_columns;
+}
+
+void
 palette_view_changed(Evas_Object *obj)
 {
   API_ENTRY;
@@ -266,7 +283,7 @@ pv_layout_timer(void *data)
 
     colors = palette_colors_get(pv->palette);
     cols = palette_columns_get(pv->palette);
-    if (cols == 0) cols = 1; //XXX use a global config value instead
+    if (cols == 0) cols = pv->default_columns;
 
     w = pv->w / cols;
     h = pv->size;

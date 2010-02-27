@@ -750,6 +750,7 @@ elicit_theme_swallow_objs(Elicit *el)
     if (!el->obj.palette)
     {
       el->obj.palette = palette_view_add(el->evas);
+      palette_view_default_columns_set(el->obj.palette, el->conf.palette_columns);
       palette_view_palette_set(el->obj.palette, el->palette);
       evas_object_smart_callback_add(el->obj.palette, "selected", cb_palette_color_selected, el);
       evas_object_smart_callback_add(el->obj.palette, "deleted", cb_palette_color_deleted, el);

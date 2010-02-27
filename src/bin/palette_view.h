@@ -19,6 +19,7 @@ struct Palette_View
   Evas_Coord x,y;
   Evas_Coord w,h;
 
+  int default_columns;
   int size;
   int direction : 1;
 
@@ -33,6 +34,8 @@ struct Palette_View
 
 Evas_Object *palette_view_add(Evas *evas);
 void palette_view_palette_set(Evas_Object *obj, Palette *palette);
+void palette_view_default_columns_set(Evas_Object *obj, int columns);
+int palette_view_default_columns_get(Evas_Object *obj);
 void palette_view_theme_set(Evas_Object *obj, const char *file, const char *group);
 Palette *palette_view_palette_get(Evas_Object *obj);
 void palette_view_changed(Evas_Object *obj);

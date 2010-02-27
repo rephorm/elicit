@@ -14,6 +14,7 @@ elicit_config_load(Elicit *el)
   el->conf.y = 0;
   el->conf.w = 200;
   el->conf.h = 200;
+  el->conf.palette_columns = 1;
   el->conf.zoom_level = 4;
   el->conf.grab_rate = 60;
   el->conf.grid_visible = 1;
@@ -75,6 +76,12 @@ elicit_config_load(Elicit *el)
     {
       color_hex_set(el->color, val);
     }
+    else if (!strcmp(key, "palette_columns"))
+    {
+      int palette_columns = atoi(val);
+      if (palette_columns >= 1)
+        el->conf.palette_columns = palette_columns;
+    }
     else if (!strcmp(key, "zoom_level"))
     {
       int zoom_level = atoi(val);
@@ -116,6 +123,7 @@ elicit_config_save(Elicit *el)
   fprintf(f, "theme: %s\n", el->conf.theme);
   fprintf(f, "geometry: %dx%d%+d%+d\n", el->conf.w, el->conf.h, el->conf.x, el->conf.y);
   fprintf(f, "color: %s\n", color_hex_get(el->color, COLOR_HEX_HASH | COLOR_HEX_CAPS));
+  fprintf(f, "palette_columns: %d\n", el->conf.palette_columns);
   fprintf(f, "zoom_level: %d\n", el->conf.zoom_level);
   fprintf(f, "grab_rate: %d\n", el->conf.grab_rate);
   fprintf(f, "grid_visible: %d\n", el->conf.grid_visible ? 1 :0);
