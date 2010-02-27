@@ -33,6 +33,22 @@ static char *related_color_names[NUM_RELATED_COLORS] = {
 
 static int related_color_offset[NUM_RELATED_COLORS] = { 120, 180, 240 };
 
+static int
+cb_x_configure(void *data, int type, void *event)
+{
+  Elicit *el = data;
+  Ecore_X_Event_Window_Configure *ev = event;
+
+  if (ev->win != ecore_evas_software_x11_window_get(el->ee)) return 0;
+  if (el->conf.x == ev->x && el->conf.y == ev->y) return 0;
+
+  el->conf.x = ev->x;
+  el->conf.y = ev->y;
+  el->conf.changed = 1;
+
+  return 0;
+}
+
 static void
 cb_ee_resize(Ecore_Evas *ee)
 {
@@ -421,7 +437,26 @@ elicit_pick(Elicit *el)
 {
   int x, y;
   int data;
+  int sx, sy, sw, sh;
   ecore_x_pointer_last_xy_get(&x, &y);
+
+  /* if pointer is inside shot, get color from image data directly */
+  evas_object_geometry_get(el->obj.shot, &sx, &sy, &sw, &sh);
+  sx += el->conf.x;
+  sy += el->conf.y;
+  printf("sx: %d, sy: %d, sw: %d, sh: %d, x: %d, y: %d\n", sx, sy, sw, sh, x, y);
+  if (sx < x && x < sx + sw  &&
+      sy < y && y < sy + sh)
+  {
+    if (elicit_shot_color_at(el->obj.shot, x - sx, y - sy, &data))
+    {
+      printf("set color from image\n");
+      color_argb_int_set(el->color, data);
+      return;
+    }
+  }
+
+  /* otherwise, grab from screen */
   if (elicit_grab_region(x, y, 1, 1, 0, &data))
     color_argb_int_set(el->color, data);
 }
@@ -552,6 +587,8 @@ elicit_new()
   ecore_evas_callback_resize_set(el->ee, cb_ee_resize);
   ecore_evas_callback_mouse_in_set(el->ee, cb_ee_mouse_in);
   ecore_evas_callback_mouse_out_set(el->ee, cb_ee_mouse_out);
+
+  ecore_event_handler_add(ECORE_X_EVENT_WINDOW_CONFIGURE, cb_x_configure, el);
 
   el->obj.main = edje_object_add(el->evas);
 

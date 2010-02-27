@@ -18,7 +18,4 @@ Load related colors
   BUGS
 --------
 
-Selecting color in zoom area should ignore grid 
-    (select from image, bypassing X)
-
 Palette scrollframe should scroll to end when adding new swatch

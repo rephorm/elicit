@@ -24,6 +24,7 @@ void elicit_shot_data_get(Evas_Object *o, void **data, int *w, int *h);
 void elicit_shot_data_set(Evas_Object *o, void *data, int w, int h);
 
 void elicit_shot_size_get(Evas_Object *o, int *w, int *h);
+int elicit_shot_color_at(Evas_Object *o, int x, int y, int *color);
 
 void elicit_shot_callback_select_add(Evas_Object *obj, Elicit_Shot_Callback_Func func, void *data);
 void elicit_shot_callback_select_del(Evas_Object *obj, Elicit_Shot_Callback_Func func);

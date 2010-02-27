@@ -184,6 +184,29 @@ elicit_shot_grab(Evas_Object *o, int x, int y, int w, int h, int force)
   sh->has_data = 1;
 }
 
+int
+elicit_shot_color_at(Evas_Object *o, int x, int y, int *color)
+{
+  Elicit_Shot *sh;
+  int *data;
+  int iw, ih;
+
+  sh = evas_object_smart_data_get(o);
+
+  if (!sh->has_data) return 0;
+
+  x /= sh->zoom;
+  y /= sh->zoom;
+  evas_object_image_size_get(sh->obj, &iw, &ih);
+  if (x < 0 || y < 0 || x >= iw || y >= ih)
+    return 0;
+
+  data = (int *)evas_object_image_data_get(sh->obj, 0);
+  *color = data[y * iw + x];
+
+  return 1;
+}
+
 void
 elicit_shot_data_get(Evas_Object *o, void **data, int *w, int *h) 
 {
