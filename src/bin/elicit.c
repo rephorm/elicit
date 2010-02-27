@@ -367,7 +367,7 @@ elicit_magnify_stop(Elicit *el)
     ecore_timer_del(el->magnify.timer);
     el->magnify.timer = NULL;
   }
-  if (el->conf.show_band)
+  if (el->conf.show_band && el->band)
     elicit_band_hide(el->band);
 }
 
