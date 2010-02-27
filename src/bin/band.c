@@ -14,6 +14,7 @@ elicit_band_new(const char *theme_file)
   //XXX allow other engines
   band->ee = ecore_evas_software_x11_new(0,0,0,0,10,10);
   ecore_evas_borderless_set(band->ee, 1);
+  ecore_evas_override_set(band->ee, 1);
   if (ecore_x_screen_is_composited(0))
     ecore_evas_alpha_set(band->ee, 1);
   else
