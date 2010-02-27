@@ -78,6 +78,11 @@ struct Elicit {
 
 typedef struct Elicit Elicit;
 
+typedef struct Elicit_Rect Elicit_Rect;
+struct Elicit_Rect {
+  int x, y, w, h;
+};
+
 Elicit *elicit_new();
 void elicit_free(Elicit *el);
 void elicit_show(Elicit *el);

@@ -22,6 +22,7 @@ struct Palette_View
   int default_columns;
   int size;
   int direction : 1;
+  int just_selected : 1;
 
   struct {
     char *file;

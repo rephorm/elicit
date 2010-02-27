@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "elicit.h"
 #include "palette_view.h"
 
 static Evas_Smart *pv_smart;
@@ -95,12 +96,30 @@ palette_view_theme_set(Evas_Object *obj, const char *file, const char *group)
 void
 palette_view_select(Evas_Object *obj, Color *c)
 {
+  Eina_List *l;
+  Evas_Object *rect;
+  Color *c2;
   API_ENTRY;
 
   if (pv->selected) color_unref(pv->selected);
 
   pv->selected = c;
   if (pv->selected) color_ref(pv->selected);
+  pv->just_selected = 1;
+
+  EINA_LIST_FOREACH(pv->rects, l, rect)
+  {
+    c2 = evas_object_data_get(rect, "Color");
+    if (c2 == c)
+    {
+      edje_object_signal_emit(obj, "elicit,swatch,select", "elicit");
+      evas_object_raise(obj);
+    }
+    else
+    {
+      edje_object_signal_emit(rect, "elicit,swatch,deselect", "elicit");
+    }
+  }
 
   palette_view_changed(obj);
 }
@@ -265,6 +284,7 @@ pv_layout_timer(void *data)
   Evas_Object *clip;
   int x, y, w, h, adj;
   Palette_View *pv;
+  Elicit_Rect selector_rect;
 
   pv = data;
   if (!pv) return 0;
@@ -335,6 +355,7 @@ pv_layout_timer(void *data)
       /* move selector to proper locations */
       if (c == pv->selected)
       {
+        selector_rect = (Elicit_Rect){x - pv->x, y - pv->y, rw, rh};
         evas_object_move(pv->selector, x, y);
         evas_object_resize(pv->selector, rw, rh);
         evas_object_show(pv->selector);
@@ -359,6 +380,12 @@ pv_layout_timer(void *data)
     evas_object_del(rect);
     pv->rects = eina_list_remove_list(pv->rects, lr);
     lr = lr_next;
+  }
+
+  if (pv->selected && pv->just_selected)
+  {
+    evas_object_smart_callback_call(pv->smart_obj, "scroll-to", &selector_rect);
+    pv->just_selected = 0;
   }
 
   pv->layout_timer = NULL;
@@ -396,23 +423,16 @@ cb_swatch_up(void *data, Evas *evas, Evas_Object *obj, void *event_info)
 
   if (ev->button == 1)
   {
-    Eina_List *l;
-    Evas_Object *rect;
-    EINA_LIST_FOREACH(pv->rects, l, rect)
-    {
-      edje_object_signal_emit(rect, "elicit,swatch,deselect", "elicit");
-    }
-    edje_object_signal_emit(obj, "elicit,swatch,select", "elicit");
-    evas_object_raise(obj);
-
     palette_view_select(pv->smart_obj, c);
     evas_object_smart_callback_call(pv->smart_obj, "selected", c);
   }
   else if (ev->button == 3)
   {
+    if (pv->selected == c)
+      palette_view_select(pv->smart_obj, NULL);
+
     palette_color_remove(pv->palette, c);
     palette_view_changed(pv->smart_obj);
-    palette_view_select(pv->smart_obj, NULL);
     evas_object_smart_callback_call(pv->smart_obj, "deleted", c);
   }
 }

@@ -296,6 +296,16 @@ cb_edje_move(void *data, Evas_Object *obj, const char *emission, const char *sou
 }
 
 static void
+cb_palette_scroll_to(void *data, Evas_Object *obj, void *event_info)
+{
+  Elicit *el = data;
+  Elicit_Rect *rect = event_info;
+
+  scrollframe_child_region_show(el->obj.palette_frame, rect->x, rect->y, rect->w, rect->h);
+  palette_view_changed(el->obj.palette);
+}
+
+static void
 cb_palette_color_selected(void *data, Evas_Object *obj, void *event_info)
 {
   Elicit *el = data;
@@ -789,6 +799,7 @@ elicit_theme_swallow_objs(Elicit *el)
       el->obj.palette = palette_view_add(el->evas);
       palette_view_default_columns_set(el->obj.palette, el->conf.palette_columns);
       palette_view_palette_set(el->obj.palette, el->palette);
+      evas_object_smart_callback_add(el->obj.palette, "scroll-to", cb_palette_scroll_to, el);
       evas_object_smart_callback_add(el->obj.palette, "selected", cb_palette_color_selected, el);
       evas_object_smart_callback_add(el->obj.palette, "deleted", cb_palette_color_deleted, el);
     }
