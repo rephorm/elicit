@@ -235,7 +235,7 @@ pv_layout(Evas_Object *obj)
 {
   API_ENTRY;
   if (pv->layout_timer) ecore_timer_del(pv->layout_timer);
-  pv->layout_timer = ecore_timer_add(0.01, pv_layout_timer, pv);
+  pv->layout_timer = ecore_timer_add(0.00, pv_layout_timer, pv);
 }
 
 static int
